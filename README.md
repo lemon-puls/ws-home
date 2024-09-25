@@ -1,5 +1,11 @@
 # ws-home
 
+## 生成 axios 代码
+```bash
+openapi --input http://localhost:8081/swagger/doc.json --output ./generated --client axios
+```
+
+
 This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup
