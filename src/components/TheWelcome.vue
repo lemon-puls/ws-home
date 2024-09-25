@@ -5,9 +5,22 @@ import ToolingIcon from './icons/IconTooling.vue'
 import EcosystemIcon from './icons/IconEcosystem.vue'
 import CommunityIcon from './icons/IconCommunity.vue'
 import SupportIcon from './icons/IconSupport.vue'
+import SvgIcon from '@/icons/SvgIcon'
 </script>
 
 <template>
+  <div>
+    <h1 class="text-3xl font-bold mb-4">Welcome to Vue 3 + Vite + Typescript + Vuetify</h1>
+<!--    <svg-icon class="icon" color="blue" icon="emoji" size="35px" />-->
+    <SvgIcon icon="back1" size="25px" />
+    <svg
+      class="svg-icon"
+      aria-hidden="true"
+      style="width: 25px; height: 25px;"
+    >
+      <use xlink:href="#icon-back1" />
+    </svg>
+  </div>
   <div class="mb-4">
     <el-button>Default</el-button>
     <el-button type="primary">Primary</el-button>
