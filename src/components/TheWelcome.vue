@@ -6,10 +6,20 @@ import EcosystemIcon from './icons/IconEcosystem.vue'
 import CommunityIcon from './icons/IconCommunity.vue'
 import SupportIcon from './icons/IconSupport.vue'
 import SvgIcon from '@/icons/SvgIcon'
+import { Service } from '../../generated'
+import EchartsTest from '@/components/test/EchartsTest.vue'
+
+const handleClick = async () => {
+  console.log('click')
+  let response = await Service.getPost(1, 10, "create_time")
+  console.log(response)
+}
+
 </script>
 
 <template>
   <div>
+    <EchartsTest />
     <h1 class="text-3xl font-bold mb-4">Welcome to Vue 3 + Vite + Typescript + Vuetify</h1>
 <!--    <svg-icon class="icon" color="blue" icon="emoji" size="35px" />-->
     <SvgIcon icon="back1" size="25px" />
@@ -23,7 +33,7 @@ import SvgIcon from '@/icons/SvgIcon'
   </div>
   <div class="mb-4">
     <el-button>Default</el-button>
-    <el-button type="primary">Primary</el-button>
+    <el-button type="primary" @click="handleClick">Primary</el-button>
     <el-button type="success">Success</el-button>
     <el-button type="info">Info</el-button>
     <el-button type="warning">Warning</el-button>
