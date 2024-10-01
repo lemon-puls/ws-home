@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
-import PhotoManager from '@/views/photoManager/index.vue'
+import PhotoManager from '@/views/PhotoManagerView.vue'
 import PhotoAlbumDetail from '@/components/photoAlbum/PhotoAlbumDetail.vue'
 
 const handleScroll = () => {
