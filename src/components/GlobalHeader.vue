@@ -3,8 +3,12 @@ import SvgIcon from '@/icons/SvgIcon'
 import { computed } from 'vue'
 import { routes } from '@/router'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+
+const userStore = useUserStore()
+let loginUser = computed(() => userStore.loginUser)
 
 const visibleRoutes = computed(() => {
   return routes.filter((item, index) => {
@@ -47,8 +51,8 @@ const handleSelect = (key: string) => {
           class="block"
           style="display: flex; align-items: center; justify-content: flex-end; column-gap: 10px"
         >
-          <el-avatar :size="50" :src="circleUrl" />
-          <el-text class="w-150px mb-2" truncated> 小霜</el-text>
+          <el-avatar :size="40" :src="loginUser.userAvatar" />
+          <el-text class="w-150px mb-2" truncated>{{ loginUser.userName }} </el-text>
         </div>
       </el-col>
     </el-row>

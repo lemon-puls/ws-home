@@ -11,15 +11,25 @@
       </el-main>
     </el-container>
 
+    <LoginOrRegister v-if="!isLogin" />
     <!--    <PhotoAlbumDetail />-->
   </div>
 </template>
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
 import PhotoManager from '@/views/PhotoManagerView.vue'
 import PhotoAlbumDetail from '@/components/photoAlbum/PhotoAlbumDetail.vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
+import LoginOrRegister from '@/components/loginOrRegister/LoginOrRegister.vue'
+import { useUserStore } from '@/stores/user'
+import ACCESS_ENUM from '@/access/accessEnum'
+
+const userStore = useUserStore()
+
+let isLogin = computed(() => {
+  return userStore.isSign
+})
 
 const handleScroll = () => {
   if (window.pageYOffset > 300) {
