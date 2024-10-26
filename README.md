@@ -2,7 +2,7 @@
 
 ## 生成 axios 代码
 ```bash
-openapi --input http://localhost:8081/swagger/doc.json --output ./generated --client axios
+openapi --input http://localhost:8080/swagger/doc.json --output ./generated --client axios
 ```
 
 
