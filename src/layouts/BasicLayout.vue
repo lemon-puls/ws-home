@@ -12,23 +12,29 @@
     </el-container>
 
     <LoginOrRegister v-if="!isLogin" />
-    <!--    <PhotoAlbumDetail />-->
+    <PhotoAlbumAdd v-if="isShowAddAlbumDialog" />
+    <PhotoAlbumDetail />
   </div>
 </template>
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
-import SvgIcon from '@/icons/SvgIcon'
-import PhotoManager from '@/views/PhotoManagerView.vue'
-import PhotoAlbumDetail from '@/components/photoAlbum/PhotoAlbumDetail.vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
 import LoginOrRegister from '@/components/loginOrRegister/LoginOrRegister.vue'
 import { useUserStore } from '@/stores/user'
-import ACCESS_ENUM from '@/access/accessEnum'
+import PhotoAlbumAdd from '@/components/photoAlbum/PhotoAlbumAdd.vue'
+import { useAlbumStore } from '@/stores/album'
+import PhotoAlbumDetail from '@/components/photoAlbum/PhotoAlbumDetail.vue'
 
 const userStore = useUserStore()
+const albumStore = useAlbumStore()
 
+// 是否已登录
 let isLogin = computed(() => {
   return userStore.isSign
+})
+// 是否显示添加相册弹窗
+let isShowAddAlbumDialog = computed(() => {
+  return albumStore.isShowAddDialog
 })
 
 const handleScroll = () => {

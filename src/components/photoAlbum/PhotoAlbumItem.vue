@@ -28,15 +28,15 @@ import SvgIcon from '@/icons/SvgIcon'
 // });
 
 // const props = defineProps(["course", "isShowOverlay"]);
-const props = withDefaults(
-  defineProps<{
-    album: {}
-    isShowOverlay?: boolean
-  }>(),
-  {
-    isShowOverlay: false
-  }
-)
+// const props = withDefaults(
+//   defineProps<{
+//     album: {}
+//     isShowOverlay?: boolean
+//   }>(),
+//   {
+//     isShowOverlay: false
+//   }
+// )
 </script>
 
 <style lang="scss" scoped>
