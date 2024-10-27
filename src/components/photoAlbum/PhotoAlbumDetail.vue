@@ -11,14 +11,42 @@
     >
       <div style="flex: 1; height: 100%" class=""></div>
       <el-divider direction="vertical" style="height: 100%" />
-      <div style="flex: 3; height: 100%; display: flex; align-items: center; padding: 20px; box-sizing: border-box" class="">
-        <PhotoItem />
+      <div
+        style="
+          flex: 3;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          /*padding: 20px;*/
+          box-sizing: border-box;
+          position: relative;
+        "
+        class=""
+      >
+        <div class="top-bar">
+          <div>
+            <el-switch
+              v-if="isEditing"
+              v-model="isCompress"
+              class="mt-2"
+              style="margin-left: 24px"
+              inactive-text="开启压缩"
+            />
+          </div>
+          <div>
+            <el-button v-if="isEditing"  @click="deleteImgs" type="danger" round>删除选定图片</el-button>
+            <el-button @click="photoItemRef.toggleEdit()" type="success" round>{{ isEditing? '完成' : '编辑' }}</el-button>
+          </div>
+        </div>
+        <PhotoItem v-model="isEditing" :is-compress="isCompress" ref="photoItemRef" />
       </div>
     </div>
   </transition>
 </template>
 
-<style scoped>
+<style lang="scss">
 /*聊天框*/
 #photoAlbumDetailId {
   --width: 80vw;
@@ -36,6 +64,28 @@
   display: flex;
   flex-direction: row;
   align-items: stretch;
+
+  .top-bar {
+    width: 100%;
+    height: 45px;
+    background-color: white;
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 10002;
+    border-top-right-radius: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 水平偏移量，垂直偏移量，模糊半径，颜色 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 20px;
+    box-sizing: border-box;
+  }
+
+  .el-divider--vertical {
+    margin: 0;
+    width: 0;
+  }
 }
 
 .overlay {
@@ -50,10 +100,22 @@
 </style>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import PhotoItem from '@/components/photoAlbum/PhotoItem.vue'
 // 聊天框显隐
 // const handleClickOutside = () => {
 //   useChatStore().showModal = false;
 // };
+
+let photoItemRef = ref()
+// photoItemRef.value.deleteSelectedImages()
+
+// 是否编辑状态
+let isEditing = ref(false)
+// 是否开启压缩
+let isCompress = ref(true)
+
+const deleteImgs = () => {
+  alert(photoItemRef.value.isEditing);
+}
 </script>
