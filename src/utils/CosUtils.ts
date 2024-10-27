@@ -1,5 +1,6 @@
 import COS from "cos-js-sdk-v5";
-import { CosService, FileControllerService, Service } from '../../generated'
+import { CosService } from '../../generated'
+
 
 export const cos = new COS({
   // getAuthorization 必选参数
@@ -15,14 +16,14 @@ export const cos = new COS({
         return;
       }
       const data = res.data;
-      const credentials = data.credentials;
+      const credentials = data.Credentials;
       callback({
-        TmpSecretId: credentials.tmpSecretId,
-        TmpSecretKey: credentials.tmpSecretKey,
-        SecurityToken: credentials.sessionToken,
+        TmpSecretId: credentials.TmpSecretId,
+        TmpSecretKey: credentials.TmpSecretKey,
+        SecurityToken: credentials.Token,
         // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
-        StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
-        ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000000
+        StartTime: data.StartTime, // 时间戳，单位秒，如：1580000000
+        ExpiredTime: data.ExpiredTime, // 时间戳，单位秒，如：1580000000
       });
     });
   },
