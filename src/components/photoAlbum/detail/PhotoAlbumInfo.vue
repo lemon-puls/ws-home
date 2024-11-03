@@ -1,25 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { defineProps } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
+import { formatDate } from '../../../utils/TimeUtils'
 
-// 模拟数据，实际应该通过props传入
-const albumInfo = ref({
-  title: '广州一日游',
-  description: `广州之旅 - 2024年春天\n这是一次难忘的广州之行。我们漫步在沙面老街，感受着独特的欧陆建筑风情；
-在陈家祠堂，欣赏精美的岭南建筑艺术；
-登上广州塔，俯瞰珠江两岸的繁华景象。
+interface Author {
+  avatar: string
+  username: string
+}
 
-午后，我们品尝了地道的早茶，感受了广州人的生活情调。
-傍晚时分，在珠江夜游的游船上，看着两岸霓虹闪烁，为这次旅程画上了完美的句点。
+interface AlbumInfo {
+  title: string
+  description: string
+  createTime: string
+  author: Author
+  photoCount: number
+}
 
-这些照片记录下了我们每一个精彩的瞬间，希望能让这些美好的回忆永远保存。`,
-  createTime: '2024-03-20 12:00:00',
-  author: {
-    avatar: 'https://example.com/avatar.jpg',
-    username: '小霜'
-  },
-  photoCount: 14
-})
+const props = defineProps<{
+  albumInfo: AlbumInfo
+}>()
 </script>
 
 <template>
@@ -39,7 +38,7 @@ const albumInfo = ref({
         <span
           ><span class="photo-count">{{ albumInfo.photoCount }}</span> 张照片</span
         >
-        <span class="create-time">{{ albumInfo.createTime }}</span>
+        <span class="create-time">{{ formatDate(albumInfo.createTime) }}</span>
       </div>
       <div class="album-info-desc" style="white-space: pre-line">{{ albumInfo.description }}</div>
     </div>

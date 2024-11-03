@@ -10,7 +10,7 @@
       v-if="true"
     >
       <div style="flex: 1; height: 100%" class="">
-        <PhotoAlbumInfo />
+        <PhotoAlbumInfo :album-info="albumInfo" />
       </div>
       <el-divider direction="vertical" style="height: 100%" />
       <div
@@ -21,7 +21,6 @@
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          /*padding: 20px;*/
           box-sizing: border-box;
           position: relative;
         "
@@ -46,7 +45,12 @@
             </el-button>
           </div>
         </div>
-        <PhotoItem v-model="isEditing" :is-compress="isCompress" ref="photoItemRef" />
+        <PhotoItem
+          v-model="isEditing"
+          :is-compress="isCompress"
+          :img-list="imgList"
+          ref="photoItemRef"
+        />
       </div>
     </div>
   </transition>
@@ -106,12 +110,64 @@
 </style>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import PhotoItem from '@/components/photoAlbum/PhotoItem.vue'
 import PhotoAlbumInfo from '@/components/photoAlbum/detail/PhotoAlbumInfo.vue'
 import { useAlbumStore } from '@/stores/album'
+import { Service } from '../../../generated'
 
 const albumStore = useAlbumStore()
+
+// 相册详情数据
+const albumInfo = ref({
+  title: '',
+  description: '',
+  createTime: '',
+  author: {
+    avatar: '',
+    username: ''
+  },
+  photoCount: 0
+})
+
+// 图片列表
+const imgList = ref<string[]>([])
+
+// 获取相册详情
+const getAlbumDetail = async (albumId: number) => {
+  try {
+    const res = await Service.getAlbum(albumId)
+    if (res.code === 0) {
+      const data = res.data
+      // 更新相册信息
+      albumInfo.value = {
+        title: data.name,
+        description: data.description,
+        createTime: data.create_time,
+        author: {
+          avatar: 'https://example.com/avatar.jpg', // 这里可以设置默认头像
+          username: data.user?.userName || '未知用户'
+        },
+        photoCount: data.photo_count || data.album_imgs?.length || 0
+      }
+      // 更新图片列表
+      imgList.value = data.album_imgs?.map((img) => img.url) || []
+    }
+  } catch (error) {
+    console.error('获取相册详情失败:', error)
+  }
+}
+
+// 监听相册ID变化
+watch(
+  () => albumStore.currentAlbumId,
+  async (newId) => {
+    if (newId) {
+      await getAlbumDetail(newId)
+    }
+  },
+  { immediate: true }
+)
 
 const handleClickOutside = () => {
   albumStore.showAlbumDetail(0)

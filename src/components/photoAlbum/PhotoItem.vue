@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, defineExpose, defineProps } from 'vue'
+import { ref, defineExpose, defineProps, PropType } from 'vue'
 
-const imgList = ref([
-  'https://txing-oj-1311424669.cos.ap-guangzhou.myqcloud.com/94a529e913f73844cac5c56318f9bc8.png',
-  'https://txing-oj-1311424669.cos.ap-guangzhou.myqcloud.com/%E6%99%BA%E7%BB%B4_proc.jpg',
-  'https://txing-oj-1311424669.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20221210155825.jpg'
-])
+const props = defineProps({
+  modelValue: Boolean,
+  isCompress: Boolean,
+  imgList: {
+    type: Array as PropType<string[]>,
+    default: () => []
+  }
+})
 
-let props = defineProps(['modelValue', 'isCompress'])
 let $emit = defineEmits(['update:modelValue'])
 import { Plus } from '@element-plus/icons-vue'
 import { cos, generateUUID } from '@/utils/CosUtils'
@@ -88,7 +90,7 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
   // TODO 调用后端接口保存图片地址
 
   // 将图片地址添加到图片列表前面
-  imgList.value.unshift(response)
+  props.imgList.unshift(response)
 }
 </script>
 
@@ -108,7 +110,7 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
       </div>
     </el-upload>
     <img
-      v-for="(img, index) in imgList"
+      v-for="(img, index) in props.imgList"
       :style="{
         width: '250px',
         height: 'auto',
@@ -155,5 +157,4 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
     display: initial !important;
   }
 }
-
 </style>
