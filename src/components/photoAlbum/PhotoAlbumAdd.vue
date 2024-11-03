@@ -16,34 +16,38 @@
         ref="ruleFormRef"
         style="max-width: 700px; width: 100%"
         :model="ruleForm"
+        :show-messages="true"
+        :scroll-to-error="true"
         status-icon
         :rules="rules"
         label-width="auto"
         class="demo-ruleForm"
       >
-        <el-form-item label="标题">
-          <el-input v-model="ruleForm.userName" />
+        <el-form-item label="标题" prop="name">
+          <el-input v-model="ruleForm.name" maxlength="50" show-word-limit />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item label="描述" prop="description" required>
           <el-input
             v-model="ruleForm.description"
             style="width: 600px"
             :rows="10"
             type="textarea"
+            maxlength="1000"
+            show-word-limit
             placeholder="请输入描述..."
           />
         </el-form-item>
-        <el-form-item label="上传封面">
+        <el-form-item label="上传封面" prop="coverImgUrl">
           <SingleImgUpload v-model="ruleForm.coverImgUrl" />
         </el-form-item>
-        <el-form-item label="开启压缩">
+        <el-form-item label="开启压缩" prop="isCompress">
           <el-switch v-model="ruleForm.isCompress" :active-icon="Check" :inactive-icon="Close" />
         </el-form-item>
-        <el-form-item label="图片上传" prop="checkPass">
-          <MutilImgUpload :is-compress="ruleForm.isCompress" />
+        <el-form-item label="图片上传" prop="albumImgs">
+          <MutilImgUpload v-model="ruleForm.albumImgs" :is-compress="ruleForm.isCompress" />
         </el-form-item>
         <el-form-item id="submitBtn">
-          <el-button type="primary" @click="submitForm(ruleFormRef)"> 登陆</el-button>
+          <el-button type="primary" @click="submitForm(ruleFormRef)"> 创建</el-button>
           <el-button @click="resetForm(ruleFormRef)"> 重置</el-button>
         </el-form-item>
       </el-form>
@@ -99,7 +103,7 @@
 
 import { reactive, ref } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Service } from '../../../generated'
+import { type dto_AlbumImgAddDTO, Service } from '../../../generated'
 import { useUserStore } from '@/stores/user'
 import ACCESS_ENUM from '@/access/accessEnum'
 import MutilImgUpload from '@/components/upload/MutilImgUpload.vue'
@@ -118,96 +122,83 @@ const handleClickOutside = () => {
   albumStore.updateShowAddDialog(false)
 }
 
-const checkAge = (rule: any, value: any, callback: any) => {
-  if (!value) {
-    return callback(new Error('Please input the age'))
-  }
-  setTimeout(() => {
-    if (!Number.isInteger(value)) {
-      callback(new Error('Please input digits'))
-    } else {
-      if (value < 18) {
-        callback(new Error('Age must be greater than 18'))
-      } else {
-        callback()
-      }
-    }
-  }, 1000)
-}
-
-const validatePass = (rule: any, value: any, callback: any) => {
-  if (value === '') {
-    callback(new Error('Please input the password'))
-  } else {
-    if (ruleForm.checkPass !== '') {
-      if (!ruleFormRef.value) return
-      ruleFormRef.value.validateField('checkPass')
-    }
-    callback()
-  }
-}
-const validatePass2 = (rule: any, value: any, callback: any) => {
-  if (value === '') {
-    callback(new Error('Please input the password again'))
-  } else if (value !== ruleForm.pass) {
-    callback(new Error("Two inputs don't match!"))
-  } else {
-    callback()
-  }
-}
-
 const ruleForm = reactive({
   name: '',
   description: '',
-  coverImg: '',
   albumImgs: [],
   isCompress: true,
   coverImgUrl: ''
 })
 
+// const rules = reactive<FormRules<typeof ruleForm>>({
+//   pass: [{ validator: validatePass, trigger: 'blur' }],
+//   checkPass: [{ validator: validatePass2, trigger: 'blur' }],
+//   age: [{ validator: checkAge, trigger: 'blur' }]
+// })
+
 const rules = reactive<FormRules<typeof ruleForm>>({
-  pass: [{ validator: validatePass, trigger: 'blur' }],
-  checkPass: [{ validator: validatePass2, trigger: 'blur' }],
-  age: [{ validator: checkAge, trigger: 'blur' }]
+  name: [
+    { required: true, message: '标题不得为空', trigger: 'blur' },
+    { min: 1, max: 50, message: '标题长度在1到50个字符', trigger: 'blur' }
+  ],
+  description: [
+    {
+      required: true,
+      message: '描述不得为空',
+      trigger: 'blur'
+    },
+    { min: 1, max: 1000, message: '标题长度在1到1000个字符', trigger: 'blur' }
+  ],
+  coverImgUrl: [
+    {
+      required: true,
+      message: '请上传封面图',
+      trigger: ''
+    }
+  ],
+  albumImgs: [
+    {
+      type: 'array',
+      required: true,
+      min: 1,
+      max: 1000,
+      message: '请上传至少一张图片',
+      trigger: 'change'
+    }
+  ]
 })
 
 const submitForm = async (formEl: FormInstance | undefined) => {
+  console.log('submit!', ruleForm)
+
+  ElMessage.success()
+
   if (!formEl) return
-  formEl.validate((valid) => {
-    if (valid) {
-      console.log('submit!')
-    } else {
-      console.log('error submit!')
+  await formEl.validate((valid, fields) => {
+    if (!valid) {
+      return
     }
   })
 
-  if (isLogin.value) {
-    // 登陆
-    const res = await Service.postUserLogin({
-      phone: ruleForm.phone,
-      password: ruleForm.pass
-    })
-    if (res.code == 0) {
-      console.log('登录成功:', res)
-      const data = res.data
-      localStorage.setItem('TOKEN', data.token)
-      // 更新用户信息
-      userStore.updateUser({
-        userRole: ACCESS_ENUM.USER,
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        userId: data.userVO.userId,
-        userName: data.userVO.userName,
-        userAvatar:
-          'https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp',
-        phone: data.userVO.phone
-      })
-    } else {
-      ElMessage.error('登录失败:' + res.msg)
+  let imgObjs: dto_AlbumImgAddDTO[] = ruleForm.albumImgs.map(img => {
+    return {
+      url: img,
     }
+  })
+  // 新建相册
+  const res = await Service.postAlbum({
+    album_imgs: imgObjs,
+    cover_img: ruleForm.coverImgUrl,
+    description: ruleForm.description,
+    name: ruleForm.name,
+    user_id: userStore.loginUser.userId,
+  })
+  if (res.code == 0) {
+    console.log('新建相册成功:', res)
+    const data = res.data
+    albumStore.updateShowAddDialog(false);
   } else {
-    // 注册
-    alert('注册功能暂未开放')
+    ElMessage.error('登录失败:' + res.msg)
   }
 }
 
