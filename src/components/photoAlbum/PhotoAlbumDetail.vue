@@ -109,10 +109,13 @@
 import { computed, ref } from 'vue'
 import PhotoItem from '@/components/photoAlbum/PhotoItem.vue'
 import PhotoAlbumInfo from '@/components/photoAlbum/detail/PhotoAlbumInfo.vue'
-// 聊天框显隐
-// const handleClickOutside = () => {
-//   useChatStore().showModal = false;
-// };
+import { useAlbumStore } from '@/stores/album'
+
+const albumStore = useAlbumStore()
+
+const handleClickOutside = () => {
+  albumStore.showAlbumDetail(0)
+}
 
 let photoItemRef = ref()
 // photoItemRef.value.deleteSelectedImages()

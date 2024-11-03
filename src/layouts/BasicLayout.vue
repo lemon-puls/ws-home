@@ -13,7 +13,7 @@
 
     <LoginOrRegister v-if="!isLogin" />
     <PhotoAlbumAdd v-if="isShowAddAlbumDialog" />
-    <PhotoAlbumDetail />
+    <PhotoAlbumDetail v-if="isShowAlbumDetailDialog" />
   </div>
 </template>
 <script setup lang="ts">
@@ -35,6 +35,10 @@ let isLogin = computed(() => {
 // 是否显示添加相册弹窗
 let isShowAddAlbumDialog = computed(() => {
   return albumStore.isShowAddDialog
+})
+// 是否打开相册详情弹窗
+let isShowAlbumDetailDialog = computed(() => {
+  return albumStore.isShowAlbumDetail
 })
 
 const handleScroll = () => {

@@ -6,6 +6,11 @@ import { useAlbumStore } from '@/stores/album'
 
 const albumStore = useAlbumStore()
 
+// 打开相册
+const handleOpenAlbum = (item: any) => {
+  albumStore.showAlbumDetail(item)
+}
+
 const imgList = [
   'https://th.bing.com/th/id/OIP.YKoZzgmubNBxQ8j-mmoTKAHaEK?w=329&h=185&c=7&r=0&o=5&dpr=1.3&pid=1.7',
   'https://www.bing.com/images/search?view=detailV2&ccid=neU%2flyZX&id=8EA47C03DC5EF4998C0487D376C492D2577760B1&thid=OIP.neU_lyZXZpazGKjZXAlGywHaEK&mediaurl=https%3a%2f%2fth.bing.com%2fth%2fid%2fR.9de53f9726576696b318a8d95c0946cb%3frik%3dsWB3V9KSxHbThw%26riu%3dhttp%253a%252f%252fpic.bizhi360.com%252fbbpic%252f95%252f9995_1.jpg%26ehk%3dGcPUjJED69TBvg9XxQr2klzDzfRsQWhAfLKlIAUWHJQ%253d%26risl%3d%26pid%3dImgRaw%26r%3d0&exph=1080&expw=1920&q=%e9%a3%8e%e6%99%af%e5%9b%be%e7%89%87%e5%a4%a7%e5%85%a8&simid=608019807869538389&FORM=IRPRST&ck=B8EC61E11CDC8E8E871D9CA1B5A48827&selectedIndex=3&itb=0',
@@ -64,7 +69,7 @@ const handleCurrentChange = (currentPage: number) => {
           </div>
         </div>
         <div class="photo-manager-content-list">
-          <PhotoAlbumItem v-for="item in 20" :key="item" />
+          <PhotoAlbumItem @click="handleOpenAlbum(item)" v-for="item in 20" :key="item" />
         </div>
         <div class="photo-manager-content-page">
           <el-pagination
