@@ -10,7 +10,10 @@
       v-if="true"
     >
       <div style="flex: 1; height: 100%" class="">
-        <PhotoAlbumInfo :album-info="albumInfo" />
+        <PhotoAlbumInfo
+          :album-info="albumInfo"
+          @update="() => getAlbumDetail(albumStore.currentAlbumId)"
+        />
       </div>
       <el-divider direction="vertical" style="height: 100%" />
       <div
@@ -74,6 +77,7 @@
   display: flex;
   flex-direction: row;
   align-items: stretch;
+  overflow: hidden;
 
   .top-bar {
     width: 100%;

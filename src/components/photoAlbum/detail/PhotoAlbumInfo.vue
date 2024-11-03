@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, ref, watch, nextTick } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
 import { formatDate } from '../../../utils/TimeUtils'
+import { Service } from '../../../../generated'
+import { ElMessage } from 'element-plus'
+import { useAlbumStore } from '@/stores/album'
+
+const albumStore = useAlbumStore()
 
 interface Author {
   avatar: string
@@ -19,6 +24,79 @@ interface AlbumInfo {
 const props = defineProps<{
   albumInfo: AlbumInfo
 }>()
+
+// 编辑状态
+const isTitleEditing = ref(false)
+const isDescEditing = ref(false)
+
+// 编辑表单数据
+const editForm = ref({
+  title: props.albumInfo.title,
+  description: props.albumInfo.description
+})
+
+// 保存编辑
+const saveEdit = async () => {
+  try {
+    const res = await Service.postAlbum({
+      id: albumStore.currentAlbumId,
+      name: editForm.value.title,
+      description: editForm.value.description
+    })
+
+    if (res.code == 0) {
+      ElMessage.success('更新成功')
+      // 触发父组件重新获取相册信息
+      emit('update')
+    } else {
+      ElMessage.error('更新失败:' + res.msg)
+    }
+  } catch (error) {
+    console.error('保存编辑失败:', error)
+    ElMessage.error('保存失败')
+  }
+}
+
+const emit = defineEmits(['update'])
+
+// 监听 props 变化更新表单数据
+watch(
+  () => props.albumInfo,
+  (newVal) => {
+    editForm.value = {
+      title: newVal.title,
+      description: newVal.description
+    }
+  },
+  { deep: true }
+)
+
+// 处理标题失焦
+const handleTitleBlur = () => {
+  isTitleEditing.value = false
+  saveEdit()
+}
+
+// 处理描述失焦
+const handleDescBlur = () => {
+  isDescEditing.value = false
+  saveEdit()
+}
+
+const titleInput = ref<HTMLInputElement | null>(null)
+const descInput = ref<HTMLInputElement | null>(null)
+
+const handleTitleClick = async () => {
+  isTitleEditing.value = true
+  await nextTick()
+  titleInput.value?.focus()
+}
+
+const handleDescClick = async () => {
+  isDescEditing.value = true
+  await nextTick()
+  descInput.value?.focus()
+}
 </script>
 
 <template>
@@ -33,14 +111,40 @@ const props = defineProps<{
 
     <!-- 相册内容 -->
     <div class="album-info-content">
-      <h1 class="album-info-title">{{ albumInfo.title }}</h1>
+      <div class="album-info-title" @click="handleTitleClick">
+        <template v-if="!isTitleEditing">
+          <div class="title-text">{{ albumInfo.title }}</div>
+        </template>
+        <el-input
+          v-else
+          ref="titleInput"
+          v-model="editForm.title"
+          @blur="handleTitleBlur"
+          @keyup.enter="handleTitleBlur"
+        />
+      </div>
+
       <div class="album-info-stats">
         <span
           ><span class="photo-count">{{ albumInfo.photoCount }}</span> 张照片</span
         >
         <span class="create-time">{{ formatDate(albumInfo.createTime) }}</span>
       </div>
-      <div class="album-info-desc" style="white-space: pre-line">{{ albumInfo.description }}</div>
+
+      <div class="album-info-desc" @click="handleDescClick">
+        <template v-if="!isDescEditing">
+          <div style="white-space: pre-line">{{ albumInfo.description }}</div>
+        </template>
+        <el-input
+          v-else
+          ref="descInput"
+          v-model="editForm.description"
+          type="textarea"
+          :rows="20"
+          :autosize="{ minRows: 20, maxRows: 50 }"
+          @blur="handleDescBlur"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -60,6 +164,7 @@ const props = defineProps<{
   overflow: hidden;
   margin: 0;
   box-sizing: border-box;
+  overflow-y: auto;
 
   &-header {
     display: flex;
@@ -84,13 +189,25 @@ const props = defineProps<{
     display: flex;
     flex-direction: column;
     gap: 12px;
+    overflow-y: auto;
   }
 
   &-title {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
-    margin: 0;
+    cursor: pointer;
+    margin-bottom: 16px;
+
+    .title-text {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    &:hover {
+      background-color: #f5f7fa;
+    }
+
+    .el-input {
+      font-size: 24px;
+    }
   }
 
   &-stats {
@@ -115,6 +232,11 @@ const props = defineProps<{
     font-size: 14px;
     color: #666;
     line-height: 1.6;
+  }
+
+  &-title,
+  &-desc {
+    cursor: pointer;
   }
 }
 </style>
