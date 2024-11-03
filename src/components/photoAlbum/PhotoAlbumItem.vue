@@ -1,42 +1,60 @@
 <template>
   <div id="courseItemId">
     <div :class="{ container: true }">
-      <img
-        src="https://txing-oj-1311424669.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20221210155825.jpg"
-      />
-      <span>14 p</span>
+      <img :src="album.cover_img" />
+      <span>{{ album.photo_count || 0 }} p</span>
     </div>
     <div class="title">
-      <span> 广州一日游 </span>
+      <span>{{ album.name }}</span>
     </div>
     <div class="footer">
       <div class="footer-author">
         <SvgIcon class="footer-author-icon" icon="author"></SvgIcon>
-        <span class="footer-author-name"> 小霜 </span>
+        <span class="footer-author-name">{{ album.user?.userName }}</span>
       </div>
-      <span class="footer-date"> 2021-08-15 12:00:00 </span>
+      <span class="footer-date">{{ formatDate(album.create_time) }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, onMounted, withDefaults } from 'vue'
+import { defineProps } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
 
-// onMounted(() => {
-//   console.log("获取到了,", props.course);
-// });
+interface User {
+  userId: number
+  userName: string
+  email: string
+  phone: string
+}
 
-// const props = defineProps(["course", "isShowOverlay"]);
-// const props = withDefaults(
-//   defineProps<{
-//     album: {}
-//     isShowOverlay?: boolean
-//   }>(),
-//   {
-//     isShowOverlay: false
-//   }
-// )
+interface Album {
+  id: number
+  create_time: string
+  update_time: string
+  name: string
+  description: string
+  user_id: number
+  cover_img: string
+  user: User
+  photos?: any[]
+  photo_count: number
+}
+
+const props = defineProps<{
+  album: Album
+}>()
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 </script>
 
 <style lang="scss" scoped>

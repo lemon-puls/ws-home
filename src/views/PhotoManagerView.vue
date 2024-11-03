@@ -3,13 +3,11 @@ import { Search } from '@element-plus/icons-vue'
 import PhotoAlbumItem from '@/components/photoAlbum/PhotoAlbumItem.vue'
 import SvgIcon from '@/icons/SvgIcon'
 import { useAlbumStore } from '@/stores/album'
+import { ref, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Service } from '../../generated'
 
 const albumStore = useAlbumStore()
-
-// 打开相册
-const handleOpenAlbum = (item: any) => {
-  albumStore.showAlbumDetail(item)
-}
 
 const imgList = [
   'https://th.bing.com/th/id/OIP.YKoZzgmubNBxQ8j-mmoTKAHaEK?w=329&h=185&c=7&r=0&o=5&dpr=1.3&pid=1.7',
@@ -17,48 +15,102 @@ const imgList = [
   'https://www.bing.com/images/search?view=detailV2&ccid=%2b34ZOx3w&id=3A928219641560C664840FA90E892701FC901BFB&thid=OIP.-34ZOx3wP4KeZnKue4L28gHaEo&mediaurl=https%3a%2f%2fwww.2008php.com%2f2011_Website_appreciate%2f2011-09-23%2f20110923163645.jpg&exph=900&expw=1440&q=%e9%a3%8e%e6%99%af%e5%9b%be%e7%89%87%e5%a4%a7%e5%85%a8&simid=608040269066018205&FORM=IRPRST&ck=7D164F69A6DCCDAEF44BAC3D759B72B2&selectedIndex=5&itb=0'
 ]
 
+// 相册列表
+const albumList = ref([])
+// 分页参数
+const currentPage = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
+
+// 搜索关键词
+const searchKeyword = ref('')
+
+// 获取相册列表
+const getAlbumList = async () => {
+  try {
+    const res = await Service.getAlbumList(
+      currentPage.value,
+      pageSize.value,
+      undefined,
+      'create_time',
+      'desc',
+      searchKeyword.value
+    )
+    if (res.code === 0) {
+      albumList.value = res.data.records
+      total.value = res.data.total
+    } else {
+      ElMessage.error('获取相册列表失败:' + res.msg)
+    }
+  } catch (error) {
+    console.error('获取相册列表出错:', error)
+    ElMessage.error('获取相册列表出错')
+  }
+}
+
+// 打开相册
+const handleOpenAlbum = (item: any) => {
+  albumStore.showAlbumDetail(item.id)
+}
+
 const handleCreate = () => {
-   albumStore.updateShowAddDialog(true)
+  albumStore.updateShowAddDialog(true)
 }
 
 const handleSizeChange = (size: number) => {
-
-}
-const handleCurrentChange = (currentPage: number) => {
-
+  pageSize.value = size
+  getAlbumList()
 }
 
+const handleCurrentChange = (current: number) => {
+  currentPage.value = current
+  getAlbumList()
+}
+
+// 搜索
+const handleSearch = () => {
+  currentPage.value = 1
+  getAlbumList()
+}
+
+// 监听添加相册对话框状态 当关闭时重新获取相册列表
+watch(
+  () => albumStore.isShowAddDialog,
+  (newVal, oldVal) => {
+    if (oldVal && !newVal) {
+      // 从 true 变为 false
+      getAlbumList() // 重新获取相册列表
+    }
+  }
+)
+
+onMounted(() => {
+  getAlbumList()
+})
 </script>
 
 <template>
   <div id="photo-manager">
-    <!--    <el-carousel height="400px">-->
-    <!--      <el-carousel-item v-for="item in imgList" :key="item">-->
-    <!--&lt;!&ndash;        <h3 class="small justify-center" text="2xl">{{ item }}</h3>&ndash;&gt;-->
-    <!--        <img :src="item" class="carousel-img">-->
-    <!--      </el-carousel-item>-->
-    <!--    </el-carousel>-->
     <el-carousel :interval="4000" type="card" height="400px">
       <el-carousel-item v-for="item in imgList" :key="item">
         <img :src="item" class="carousel-img" />
       </el-carousel-item>
     </el-carousel>
     <div class="photo-manager">
-      <!--      <div class="photo-manager-content">-->
       <el-card class="photo-manager-content">
         <div class="photo-manager-content-search">
           <div class="photo-manager-content-search-left">
             <el-input
-              v-model="input2"
+              v-model="searchKeyword"
               style="width: 240px; border-radius: 10px"
-              placeholder="Please Input"
+              placeholder="搜索相册..."
               :suffix-icon="Search"
+              @keyup.enter="handleSearch"
             />
             <div @click="handleCreate">
               <SvgIcon icon="create" size="40px" />
             </div>
           </div>
-
           <div class="photo-manager-content-search-right">
             <el-switch
               v-model="value1"
@@ -69,24 +121,25 @@ const handleCurrentChange = (currentPage: number) => {
           </div>
         </div>
         <div class="photo-manager-content-list">
-          <PhotoAlbumItem @click="handleOpenAlbum(item)" v-for="item in 20" :key="item" />
+          <PhotoAlbumItem
+            v-for="album in albumList"
+            :key="album.id"
+            :album="album"
+            @click="handleOpenAlbum(album)"
+          />
         </div>
         <div class="photo-manager-content-page">
           <el-pagination
-            v-model:current-page="currentPage2"
-            v-model:page-size="pageSize2"
-            :page-sizes="[100, 200, 300, 400]"
-            :size="size"
-            :disabled="disabled"
-            :background="background"
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
             layout="sizes, prev, pager, next"
-            :total="1000"
+            :total="total"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
           />
         </div>
       </el-card>
-      <!--      </div>-->
     </div>
   </div>
 </template>
@@ -125,7 +178,6 @@ const handleCurrentChange = (currentPage: number) => {
           justify-content: center;
           column-gap: 10px;
         }
-
       }
 
       &-list {
