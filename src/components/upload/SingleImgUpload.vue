@@ -1,16 +1,31 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { cos, generateUUID } from '@/utils/CosUtils'
 import { Plus } from '@element-plus/icons-vue'
 
-import {
-  type UploadFile,
-  type UploadFiles,
-  type UploadRequestHandler,
-} from 'element-plus'
+import { type UploadFile, type UploadFiles, type UploadRequestHandler } from 'element-plus'
 import { compressImage } from '@/utils/FileUtils'
 
+// 定义 props
+const props = defineProps<{
+  modelValue: string
+}>()
+
+// 定义 emits
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+}>()
+
+// 本地图片 URL
 const imageUrl = ref('')
+
+// 监听 props.modelValue 的变化
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    imageUrl.value = newValue
+  }
+)
 
 const ajaxUpload: UploadRequestHandler = (option) => {
   const sizeInMB = option.file.size / (1024 * 1024)
@@ -62,6 +77,8 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
   console.log('上传成功：', response, uploadFile, uploadFiles)
   uploadFile.url = response
   imageUrl.value = response
+  // 触发 v-model 更新
+  emit('update:modelValue', response)
 }
 </script>
 

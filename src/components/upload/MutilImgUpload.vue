@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { cos, generateUUID } from '@/utils/CosUtils'
 import { Plus } from '@element-plus/icons-vue'
 
@@ -11,15 +11,53 @@ import {
   type UploadUserFile
 } from 'element-plus'
 import { compressImage } from '@/utils/FileUtils'
+import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 
-let props = defineProps(['isCompress'])
+// 定义 props - 接收字符串数组
+const props = defineProps<{
+  modelValue: string[]
+  isCompress?: boolean
+}>()
 
+// 定义 emits
+const emit = defineEmits<{
+  'update:modelValue': [value: string[]]
+}>()
+
+// 本地维护完整的文件列表
 const fileList = ref<UploadUserFile[]>([])
-
-console.log('import.meta.env.VITE_API_URL', import.meta.env.VITE_API_URL)
 
 const dialogImageUrl = ref('')
 const dialogVisible = ref(false)
+
+// TODO 加上这段代码会导致 handleSuccess 无法触发，具体原因后面有时间再细看
+// // 监听 props.modelValue 的变化,将 URL 数组转换为 UploadUserFile 数组
+// watch(
+//   () => props.modelValue,
+//   (newUrls) => {
+//     const newFileList = newUrls.map((url) => ({
+//       name: url.substring(url.lastIndexOf('/') + 1),
+//       url: url
+//     }))
+//
+//     if (JSON.stringify(fileList.value) !== JSON.stringify(newFileList)) {
+//       fileList.value = newFileList
+//     }
+//   },
+//   { immediate: true }
+// )
+
+// // 监听文件列表变化
+watch(
+  () => fileList.value,
+  (newFileList) => {
+    const newUrls = newFileList.map((file) => file.url || '').filter((url) => url)
+    if (JSON.stringify(props.modelValue) !== JSON.stringify(newUrls)) {
+      emit('update:modelValue', newUrls)
+    }
+  },
+  { deep: true }
+)
 
 const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
   console.log(uploadFile, uploadFiles)
@@ -70,10 +108,12 @@ const uploadFile = (option) => {
       }
     },
     function (err, data) {
+      console.log('COS 上传完成回调：', err, data)
       if (err) {
         option.onError(new UploadAjaxError(err.message, err.statusCode, err.method, err.url))
       } else {
         const downloadUrl = 'https://' + data.Location
+        console.log('下载链接：', downloadUrl)
         option.onSuccess(downloadUrl)
       }
     }
