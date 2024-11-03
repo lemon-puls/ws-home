@@ -9,7 +9,9 @@
       style="display: flex; align-items: center; justify-content: center"
       v-if="true"
     >
-      <div style="flex: 1; height: 100%" class=""></div>
+      <div style="flex: 1; height: 100%" class="">
+        <PhotoAlbumInfo />
+      </div>
       <el-divider direction="vertical" style="height: 100%" />
       <div
         style="
@@ -36,8 +38,12 @@
             />
           </div>
           <div>
-            <el-button v-if="isEditing"  @click="deleteImgs" type="danger" round>删除选定图片</el-button>
-            <el-button @click="photoItemRef.toggleEdit()" type="success" round>{{ isEditing? '完成' : '编辑' }}</el-button>
+            <el-button v-if="isEditing" @click="deleteImgs" type="danger" round
+              >删除选定图片</el-button
+            >
+            <el-button @click="photoItemRef.toggleEdit()" type="success" round
+              >{{ isEditing ? '完成' : '编辑' }}
+            </el-button>
           </div>
         </div>
         <PhotoItem v-model="isEditing" :is-compress="isCompress" ref="photoItemRef" />
@@ -102,6 +108,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import PhotoItem from '@/components/photoAlbum/PhotoItem.vue'
+import PhotoAlbumInfo from '@/components/photoAlbum/detail/PhotoAlbumInfo.vue'
 // 聊天框显隐
 // const handleClickOutside = () => {
 //   useChatStore().showModal = false;
@@ -116,6 +123,6 @@ let isEditing = ref(false)
 let isCompress = ref(true)
 
 const deleteImgs = () => {
-  alert(photoItemRef.value.isEditing);
+  alert(photoItemRef.value.isEditing)
 }
 </script>
