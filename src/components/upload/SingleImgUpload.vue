@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { cos, generateUUID } from '@/utils/CosUtils'
 import { Plus } from '@element-plus/icons-vue'
 
@@ -20,12 +20,10 @@ const emit = defineEmits<{
 const imageUrl = ref('')
 
 // 监听 props.modelValue 的变化
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    imageUrl.value = newValue
-  }
-)
+watchEffect(() => {
+  imageUrl.value = props.modelValue
+  console.log('imageUrl', imageUrl.value)
+})
 
 const ajaxUpload: UploadRequestHandler = (option) => {
   const sizeInMB = option.file.size / (1024 * 1024)

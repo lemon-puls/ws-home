@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import SvgIcon from '@/icons/SvgIcon'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { routes } from '@/router'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import UserInfoEdit from '@/components/user/UserInfoEdit.vue'
 
 const router = useRouter()
 
@@ -22,6 +23,8 @@ const visibleRoutes = computed(() => {
 const handleSelect = (key: string) => {
   router.push({ path: key })
 }
+
+const showUserEdit = ref(false)
 </script>
 
 <template>
@@ -51,12 +54,18 @@ const handleSelect = (key: string) => {
           class="block"
           style="display: flex; align-items: center; justify-content: flex-end; column-gap: 10px"
         >
-          <el-avatar :size="40" :src="loginUser.userAvatar" />
+          <el-avatar
+            :size="40"
+            :src="loginUser.userAvatar"
+            @click="showUserEdit = true"
+            style="cursor: pointer"
+          />
           <el-text class="w-150px mb-2" truncated>{{ loginUser.userName }} </el-text>
         </div>
       </el-col>
     </el-row>
   </div>
+  <UserInfoEdit v-model:show="showUserEdit" />
 </template>
 
 <style scoped></style>
