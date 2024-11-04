@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, computed, defineProps, defineEmits, withDefaults } from 'vue'
 import { cos, generateUUID } from '@/utils/CosUtils'
 import { Plus } from '@element-plus/icons-vue'
 
@@ -7,9 +7,25 @@ import { type UploadFile, type UploadFiles, type UploadRequestHandler } from 'el
 import { compressImage } from '@/utils/FileUtils'
 
 // 定义 props
-const props = defineProps<{
-  modelValue: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: string
+    // 图片宽度
+    width?: string | number
+    // 图片高度
+    height?: string | number
+    // 图片形状,'circle' | 'square'
+    shape?: 'circle' | 'square'
+    // 边框圆角
+    borderRadius?: string | number
+  }>(),
+  {
+    width: '178px',
+    height: '178px',
+    shape: 'square',
+    borderRadius: '6px'
+  }
+)
 
 // 定义 emits
 const emit = defineEmits<{
@@ -78,6 +94,35 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
   // 触发 v-model 更新
   emit('update:modelValue', response)
 }
+
+// 计算图片样式
+const imageStyle = computed(() => {
+  let style = {
+    width: typeof props.width === 'number' ? `${props.width}px` : props.width,
+    height: typeof props.height === 'number' ? `${props.height}px` : props.height,
+    borderRadius:
+      props.shape === 'circle'
+        ? '50%'
+        : typeof props.borderRadius === 'number'
+          ? `${props.borderRadius}px`
+          : props.borderRadius,
+    objectFit: 'cover'
+  }
+  console.log('imageStyle', style)
+  return style
+})
+
+// 计算上传图标容器样式
+const uploaderStyle = computed(() => ({
+  width: typeof props.width === 'number' ? `${props.width}px` : props.width,
+  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
+  borderRadius:
+    props.shape === 'circle'
+      ? '50%'
+      : typeof props.borderRadius === 'number'
+        ? `${props.borderRadius}px`
+        : props.borderRadius
+}))
 </script>
 
 <template>
@@ -87,8 +132,8 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
     :on-success="handleSuccess"
     :http-request="ajaxUpload"
   >
-    <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-    <el-icon v-else class="avatar-uploader-icon">
+    <img v-if="imageUrl" :src="imageUrl" class="avatar" :style="imageStyle" />
+    <el-icon v-else class="avatar-uploader-icon" :style="uploaderStyle">
       <Plus />
     </el-icon>
   </el-upload>
@@ -97,29 +142,26 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
 <style lang="scss">
 .avatar-uploader .el-upload {
   border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: var(--el-transition-duration-fast);
-}
 
-.avatar-uploader .el-upload:hover {
-  border-color: var(--el-color-primary);
+  &:hover {
+    border-color: var(--el-color-primary);
+  }
 }
 
 .el-icon.avatar-uploader-icon {
   font-size: 28px;
   color: #8c939d;
-  width: 178px;
-  height: 178px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .avatar {
-  $width: 20vw;
-  max-width: 250px;
-  width: $width;
-  //height: calc(378 / 672 * $width);
+  display: block;
 }
 </style>
