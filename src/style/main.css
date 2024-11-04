@@ -47,3 +47,10 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #979797;
 }
+
+/**
+  信息提示框给予较高的z-index，避免被遮挡
+ */
+.el-message {
+    z-index: 20000 !important;
+}
