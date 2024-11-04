@@ -86,7 +86,7 @@
     position: sticky;
     top: 0;
     left: 0;
-    z-index: 10002;
+    //z-index: 10002;
     border-top-right-radius: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 水平偏移量，垂直偏移量，模糊半径，颜色 */
     display: flex;
