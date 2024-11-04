@@ -14,6 +14,7 @@ let $emit = defineEmits(['update:modelValue'])
 import { Plus } from '@element-plus/icons-vue'
 import { cos, generateUUID } from '@/utils/CosUtils'
 import type { UploadFile, UploadFiles } from 'element-plus'
+import ImgPreviewer from '@/components/preview/ImgPreviewer.vue'
 
 // const isEditing = ref(false) // 控制编辑状态
 const selectedImages = ref<number[]>([]) // 选中的图片索引
@@ -109,19 +110,20 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
         <Plus class="photo-upload-btn-icon" />
       </div>
     </el-upload>
-    <img
+    <ImgPreviewer
       v-for="(img, index) in props.imgList"
+      :key="index"
+      :src="img"
+      :preview-src-list="props.imgList"
+      :initial-index="index"
+      :is-editing="props.modelValue"
+      :class="{ selected: selectedImages.includes(index) }"
       :style="{
         width: '250px',
         height: 'auto',
-        margin: '10px',
-        borderRadius: '10px',
-        border: selectedImages.includes(index) ? '2px solid red' : 'none'
+        margin: '10px'
       }"
-      :key="index"
-      :src="img"
-      alt="photo"
-      @click="props.modelValue ? toggleSelection(index) : null"
+      @select="toggleSelection(index)"
     />
   </div>
 </template>
@@ -133,7 +135,7 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
     width: 150px;
     height: 150px;
     margin: 10px;
-    borderradius: 10px;
+    border-radius: 10px;
     border: 2px dashed #ccc;
     position: relative;
 
@@ -155,6 +157,37 @@ const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: Uploa
 
   .upload-demo {
     display: initial !important;
+  }
+
+  .selected {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 3px solid #ff4757;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+      animation: selectedPulse 2s infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+  }
+
+  @keyframes selectedPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+    }
   }
 }
 </style>
