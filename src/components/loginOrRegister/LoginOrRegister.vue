@@ -99,10 +99,13 @@ import { Service } from '../../../generated'
 import { useUserStore } from '@/stores/user'
 import ACCESS_ENUM from '@/access/accessEnum'
 import { a } from 'vitest/dist/suite-IbNSsUWN'
+import { useRouter } from 'vue-router'
 
 const isLogin = ref(true)
 
 const userStore = useUserStore()
+
+const router = useRouter()
 
 const ruleFormRef = ref<FormInstance>()
 
@@ -184,6 +187,8 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       localStorage.setItem('ACCESS_TOKEN', data.accessToken)
       localStorage.setItem('REFRESH_TOKEN', data.refreshToken)
       ElMessage.success('登录成功')
+      // 刷新页面
+      window.location.reload()
     } else {
       ElMessage.error('登录失败:' + res.msg)
     }
