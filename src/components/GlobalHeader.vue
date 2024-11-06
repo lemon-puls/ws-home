@@ -31,13 +31,12 @@ const showUserEdit = ref(false)
   <div class="global-header">
     <el-row style="height: 100%" :gutter="20">
       <el-col :span="4">
-        <div style="display: flex; align-items: center; column-gap: 10px">
+        <div class="logo-container">
           <SvgIcon icon="xdl" size="45px" />
           <img src="../assets/img.png" height="35px" />
         </div>
       </el-col>
       <el-col :span="16">
-        <!--            <div style="background-color: yellow" class="grid-content ep-bg-purple" />-->
         <el-menu
           :default-active="routes[0].path"
           class="el-menu-demo"
@@ -50,17 +49,14 @@ const showUserEdit = ref(false)
         </el-menu>
       </el-col>
       <el-col :span="4">
-        <div
-          class="block"
-          style="display: flex; align-items: center; justify-content: flex-end; column-gap: 10px"
-        >
+        <div class="user-info">
           <el-avatar
             :size="40"
             :src="loginUser.avatar"
             @click="showUserEdit = true"
             style="cursor: pointer"
           />
-          <el-text class="w-150px mb-2" truncated>{{ loginUser.userName }} </el-text>
+          <el-text class="w-150px mb-2" truncated>{{ loginUser.userName }}</el-text>
         </div>
       </el-col>
     </el-row>
@@ -68,4 +64,36 @@ const showUserEdit = ref(false)
   <UserInfoEdit v-model:show="showUserEdit" />
 </template>
 
-<style scoped></style>
+<style scoped lang="scss">
+.global-header {
+  height: 60px;
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    column-gap: 10px;
+    height: 100%;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    column-gap: 10px;
+    height: 100%;
+    padding-right: 20px;
+  }
+
+  // 设置了也不生效，不设置也没影响
+  // :deep(.el-menu) 和 :deep(.el-menu-item) 是Vue 3中的深度选择器语法，用于修改组件内部的Element Plus组件样式。
+  // :deep(.el-menu) {
+  //   height: 100%;
+  //   border-bottom: none;
+  // }
+
+  // :deep(.el-menu-item) {
+  //   display: flex;
+  //   align-items: center;
+  // }
+}
+</style>
