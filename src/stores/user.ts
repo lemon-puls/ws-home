@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import ACCESS_ENUM from '@/access/accessEnum'
+import { Service } from '../../generated'
 
 export const useUserStore = defineStore(
   'user',
@@ -11,7 +12,7 @@ export const useUserStore = defineStore(
       refreshToken: '',
       userId: -1,
       userName: '未登录',
-      userAvatar:
+      avatar:
         'https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp',
       phone: ''
     })
@@ -29,9 +30,13 @@ export const useUserStore = defineStore(
 
     const getLoginUser = async () => {
       // 请求后端 获取登录信息
-      const res = await UserControllerService.getLoginUserUsingGet()
+      const res = await Service.getUserCurrent()
       if (res.code === 0) {
-        updateUser(res.data)
+        const data = res.data
+        updateUser({
+          userRole: ACCESS_ENUM.USER,
+          ...data
+        })
       } else {
         updateUser({ ...loginUser.value, userRole: ACCESS_ENUM.NOT_LOGIN })
       }
