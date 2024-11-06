@@ -2,6 +2,7 @@
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import "@/plugins/axios";
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import App from './App.vue'
