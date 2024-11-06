@@ -6,7 +6,7 @@ import { Service } from '../../generated'
 export const useUserStore = defineStore(
   'user',
   () => {
-    const loginUser = ref({
+    const unLoginUser = {
       userRole: ACCESS_ENUM.NOT_LOGIN,
       accessToken: '',
       refreshToken: '',
@@ -15,15 +15,16 @@ export const useUserStore = defineStore(
       avatar:
         'https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp',
       phone: ''
-    })
+    }
+
+    const loginUser = ref(unLoginUser)
     const isSign = computed({
       get: () => {
         return loginUser.value.userRole !== ACCESS_ENUM.NOT_LOGIN && loginUser.value.userId > 0
       },
       set: (val) => {
         if (!val) {
-          loginUser.value.userRole = ACCESS_ENUM.NOT_LOGIN
-          loginUser.value.userId = -1
+          Object.assign(loginUser.value, payload)
         }
       }
     })
@@ -43,10 +44,26 @@ export const useUserStore = defineStore(
     }
 
     const updateUser = (payload: any) => {
-      loginUser.value = payload
+      Object.assign(loginUser.value, payload)
     }
 
-    return { loginUser, getLoginUser, updateUser, isSign }
+    // 退出登陆
+    const logout = () => {
+      // 这种整体赋值的方式会破坏响应式引用，因为它创建了一个新的引用，而持久化的数据可能无法正确追踪这个新的引用
+      // updateUser(unLoginUser)
+      // loginUser.value = unLoginUser
+
+      // 这种方式是直接修改现有响应式对象的属性，保持了原有的响应式引用，因此能够正确触发更新并被持久化存储系统追踪。
+      // loginUser.value.userRole = ACCESS_ENUM.NOT_LOGIN
+
+      // 这样可以保持原有的响应式引用，同时更新所有属性。
+      Object.assign(loginUser.value, unLoginUser)
+
+      localStorage.removeItem('ACCESS_TOKEN')
+      localStorage.removeItem('REFRESH_TOKEN')
+    }
+
+    return { loginUser, getLoginUser, updateUser, isSign, logout }
   },
   {
     persist: true
