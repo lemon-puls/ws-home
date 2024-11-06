@@ -43,8 +43,7 @@ const getAlbumList = async () => {
       ElMessage.error('获取相册列表失败:' + res.msg)
     }
   } catch (error) {
-    console.error('获取相册列表出错:', error)
-    ElMessage.error('获取相册列表出错')
+    ElMessage.error(error.message)
   }
 }
 
