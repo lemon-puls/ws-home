@@ -4,44 +4,56 @@
     enter-active-class="animate__animated animate__backInLeft"
     leave-active-class="animate__animated animate__backOutRight"
   >
-    <div
-      id="loginOrRegisterId"
-      style="display: flex; flex-direction: column; align-items: center; justify-content: center"
-      v-if="true"
-    >
-      <div style="display: flex; justify-content: right; width: 80%">
+    <div id="loginOrRegisterId" v-if="true">
+      <div class="header">
         <el-switch v-model="isLogin" active-text="登录" inactive-text="注册" />
       </div>
-      <div>
-        <SvgIcon icon="xdl" size="90px" />
+      <div class="logo">
+        <SvgIcon icon="xdl" :size="logoSize" />
       </div>
-      <div style="margin-bottom: 30px">
-        <span style="font-size: 20px; font-weight: bold">Welcome to WS HOME</span>
+      <div class="welcome">
+        <span>Welcome to WS HOME</span>
       </div>
       <el-form
         ref="ruleFormRef"
-        style="max-width: 18vw"
         :model="ruleForm"
         status-icon
         :rules="rules"
-        label-width="auto"
-        class="demo-ruleForm"
+        label-width="5em"
+        class="login-form"
       >
-        <el-form-item label="用户名" v-show="!isLogin">
-          <el-input v-model="ruleForm.userName" />
+        <el-form-item label="用户名" prop="userName" v-show="!isLogin">
+          <el-input v-model="ruleForm.userName" :placeholder="isLogin ? '' : '请输入用户名'" />
         </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="ruleForm.phone" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input
+            v-model="ruleForm.phone"
+            :placeholder="isLogin ? '请输入手机号登录' : '请输入手机号注册'"
+          />
         </el-form-item>
         <el-form-item label="密码" prop="pass">
-          <el-input v-model="ruleForm.pass" type="password" autocomplete="off" />
+          <el-input
+            v-model="ruleForm.pass"
+            type="password"
+            autocomplete="off"
+            placeholder="请输入密码"
+          />
         </el-form-item>
         <el-form-item v-show="!isLogin" label="确认密码" prop="checkPass">
-          <el-input v-model="ruleForm.checkPass" type="password" autocomplete="off" />
+          <el-input
+            v-model="ruleForm.checkPass"
+            type="password"
+            autocomplete="off"
+            placeholder="请再次输入密码"
+          />
         </el-form-item>
-        <el-form-item id="submitBtn">
-          <el-button type="primary" @click="submitForm(ruleFormRef)"> 登陆</el-button>
-          <el-button @click="resetForm(ruleFormRef)"> 重置</el-button>
+        <el-form-item class="btn-group">
+          <div class="btn-container">
+            <el-button type="primary" @click="submitForm(ruleFormRef)">
+              {{ isLogin ? '登录' : '注册' }}
+            </el-button>
+            <el-button @click="resetForm(ruleFormRef)">重置</el-button>
+          </div>
         </el-form-item>
       </el-form>
     </div>
@@ -49,28 +61,75 @@
 </template>
 
 <style lang="scss">
-/*聊天框*/
 #loginOrRegisterId {
-  --width: 20vw;
-  --hight: 45vh;
-  width: var(--width);
-  height: var(--hight);
+  --min-width: 300px;
+  --max-width: 400px;
+  --min-height: 400px;
+
+  width: clamp(var(--min-width), 25vw, var(--max-width));
+  min-height: var(--min-height);
   background-color: white;
   position: fixed;
-  left: calc(50% - var(--width) / 2);
-  top: calc(50% - var(--hight) / 2);
-  /*transform: translateX(-50%);*/
-  /*transform: translateX(-50%);*/
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 10001;
   border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: row;
-  align-items: stretch;
+  flex-direction: column;
+  align-items: center;
 
-  #submitBtn {
-    .el-form-item__content {
-      justify-content: center !important;
-      margin-top: 20px;
+  .header {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+
+  .logo {
+    margin: 0 0 1rem 0;
+  }
+
+  .welcome {
+    margin-bottom: 2rem;
+    span {
+      font-size: clamp(1.2rem, 2vw, 1.5rem);
+      font-weight: bold;
+      background: linear-gradient(45deg, #409eff, #7e33dd);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+  }
+
+  .login-form {
+    width: 90%;
+
+    :deep(.el-form-item) {
+      margin-bottom: 1.5rem;
+    }
+
+    :deep(.el-input) {
+      --el-input-height: 2.5rem;
+      max-width: 280px;
+    }
+
+    .btn-group {
+      margin-top: 2rem;
+
+      .btn-container {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        width: 100%;
+        padding-right: 5em; // 补偿label-width的宽度，确保按钮在整个表单的中心
+      }
+
+      .el-button {
+        min-width: 6rem;
+        height: 2.5rem;
+      }
     }
   }
 }
@@ -83,6 +142,7 @@
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   z-index: 10000;
+  backdrop-filter: blur(3px);
 }
 </style>
 
@@ -92,13 +152,12 @@
 //   useChatStore().showModal = false;
 // };
 
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import SvgIcon from '@/icons/SvgIcon'
 import { Service } from '../../../generated'
 import { useUserStore } from '@/stores/user'
 import ACCESS_ENUM from '@/access/accessEnum'
-import { a } from 'vitest/dist/suite-IbNSsUWN'
 import { useRouter } from 'vue-router'
 
 const isLogin = ref(true)
@@ -202,4 +261,9 @@ const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.resetFields()
 }
+
+// 调整 logo 大小范围
+const logoSize = computed(() => {
+  return 'clamp(90px, 12vw, 120px)' // 增大最小值和最大值范围
+})
 </script>
