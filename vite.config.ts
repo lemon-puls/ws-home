@@ -13,7 +13,7 @@ export default defineConfig({
     vueJsx(),
     createSvgIconsPlugin({
       // Specify the icon folder to be cached
-      iconDirs: [path.resolve(process.cwd(), "src/icons/svg")],
+      iconDirs: [path.resolve(process.cwd(), 'src/icons/svg')],
       // Specify symbolId format
       symbolId: 'icon-[name]'
     })
@@ -27,10 +27,9 @@ export default defineConfig({
     proxy: {
       // 代理的路径
       '/api': {
-        target: 'http://localhost:8081', // 目标服务器地址
+        target: 'http://localhost:8080', // 目标服务器地址
         changeOrigin: true, // 是否改变请求源
-        // rewrite: (path) => path.replace(/^\/api/, ''), // 重写路径，去掉 /api 前缀
-      },
-    },
-  },
+      }
+    }
+  }
 })
