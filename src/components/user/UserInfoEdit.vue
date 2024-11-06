@@ -26,9 +26,9 @@
 
       <el-form-item label="性别" prop="gender">
         <el-radio-group v-model="form.gender">
-          <el-radio :label="1">男</el-radio>
-          <el-radio :label="2">女</el-radio>
-          <el-radio :label="0">保密</el-radio>
+          <el-radio :label="0">男</el-radio>
+          <el-radio :label="1">女</el-radio>
+          <el-radio :label="2">保密</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -61,6 +61,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import type { FormInstance, FormRules } from 'element-plus'
 import SingleImgUpload from '@/components/upload/SingleImgUpload.vue'
+import { dto_UpdateUserDTO, Service } from '../../../generated'
 
 const props = defineProps<{
   show: boolean
@@ -73,16 +74,7 @@ const dialogVisible = ref(false)
 const formRef = ref<FormInstance>()
 
 // 表单数据
-const form = ref({
-  userName: userStore.loginUser.userName,
-  email: '',
-  phone: userStore.loginUser.phone,
-  gender: 0,
-  age: 18,
-  password: '',
-  confirmPassword: '',
-  avatar: userStore.loginUser.userAvatar
-})
+const form = ref({})
 
 // 表单验证规则
 const rules = ref<FormRules>({
@@ -118,6 +110,10 @@ watch(
   () => props.show,
   (val) => {
     dialogVisible.value = val
+    if (val) {
+      // 当 show 为 true 时也重置表单数据
+      resetFormData()
+    }
   }
 )
 
@@ -137,13 +133,32 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         // TODO: 调用更新用户信息的 API
-        ElMessage.success('更新成功')
-        dialogVisible.value = false
+        const res = await Service.putUser(form.value as dto_UpdateUserDTO)
+        if (res.code == 0) {
+          userStore.getLoginUser()
+          dialogVisible.value = false
+          ElMessage.success('更新成功')
+        } else {
+          ElMessage.error('更新失败:' + res.msg)
+        }
       } catch (error) {
         ElMessage.error('更新失败')
       }
     }
   })
+}
+
+const resetFormData = () => {
+  form.value = {
+    userName: userStore.loginUser.userName,
+    email: userStore.loginUser.email,
+    phone: userStore.loginUser.phone,
+    gender: userStore.loginUser.gender,
+    age: userStore.loginUser.age,
+    newPassword: '',
+    oldPassword: '',
+    avatar: userStore.loginUser.avatar
+  }
 }
 </script>
 
