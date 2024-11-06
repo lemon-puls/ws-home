@@ -16,8 +16,12 @@ export const useUserStore = defineStore(
         'https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp',
       phone: ''
     }
-
-    const loginUser = ref(unLoginUser)
+    // 注意这里不要直接 ref(unLoginUser)，因为这样会导致 loginUser 和 unLoginUser 共享同一个引用。
+    // 当我们修改 loginUser 的值时，unLoginUser 的值也会被修改。
+    // 使用展开运算符 {...unLoginUser} 创建一个新对象，这样可以避免引用共享的问题。
+    const loginUser = ref({
+      ...unLoginUser
+    })
     const isSign = computed({
       get: () => {
         return loginUser.value.userRole !== ACCESS_ENUM.NOT_LOGIN && loginUser.value.userId > 0
