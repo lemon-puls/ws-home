@@ -174,20 +174,16 @@ const submitForm = async (formEl: FormInstance | undefined) => {
       password: ruleForm.pass
     })
     if (res.code == 0) {
-      console.log('登录成功:', res)
       const data = res.data
-      localStorage.setItem('TOKEN', data.token)
       // 更新用户信息
       userStore.updateUser({
         userRole: ACCESS_ENUM.USER,
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        userId: data.userVO.userId,
-        userName: data.userVO.userName,
-        userAvatar:
-          'https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp',
-        phone: data.userVO.phone,
+        ...data.userVO
       })
+      // 存储访问 token 和 refresh token
+      localStorage.setItem('ACCESS_TOKEN', data.accessToken)
+      localStorage.setItem('REFRESH_TOKEN', data.refreshToken)
+      ElMessage.success('登录成功')
     } else {
       ElMessage.error('登录失败:' + res.msg)
     }

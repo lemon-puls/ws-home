@@ -56,7 +56,7 @@ const showUserEdit = ref(false)
         >
           <el-avatar
             :size="40"
-            :src="loginUser.userAvatar"
+            :src="loginUser.avatar"
             @click="showUserEdit = true"
             style="cursor: pointer"
           />
