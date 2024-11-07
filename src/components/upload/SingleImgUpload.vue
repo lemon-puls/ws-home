@@ -89,6 +89,23 @@ const uploadFile = (option) => {
 
 const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
   console.log('上传成功：', response, uploadFile, uploadFiles)
+  // 删除 COS 上的旧图片
+  if (imageUrl.value) {
+    const oldKey = imageUrl.value.substring(imageUrl.value.lastIndexOf('/') + 1)
+    cos.deleteObject(
+      {
+        Bucket: import.meta.env.VITE_COS_BUCKET,
+        Region: import.meta.env.VITE_COS_REGION,
+        Key: oldKey
+      },
+      function (err, data) {
+        if (err) {
+          console.error('delete old image error：', err)
+        }
+      }
+    )
+  }
+
   uploadFile.url = response
   imageUrl.value = response
   // 触发 v-model 更新
