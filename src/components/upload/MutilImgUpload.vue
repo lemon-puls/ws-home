@@ -60,7 +60,21 @@ watch(
 )
 
 const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
-  console.log(uploadFile, uploadFiles)
+  // 从文件的 URL 中提取出对象键
+  const url = uploadFile.url
+  const key = url.substring(url.lastIndexOf('/') + 1)
+  cos.deleteObject(
+    {
+      Bucket: import.meta.env.VITE_COS_BUCKET, // 替换为你的 bucket 名称
+      Region: import.meta.env.VITE_COS_REGION, // 替换为你的地域
+      Key: key // 要删除的对象键
+    },
+    function (err, data) {
+      if (err) {
+        console.error('删除失败：', err)
+      }
+    }
+  )
 }
 
 const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) => {
@@ -98,7 +112,7 @@ const uploadFile = (option) => {
       // SliceSize:
       //   1024 *
       //   1024 *
-      //   5 /* 触发分块上传的阈值，超过5MB使用分块上传，小于5MB使用 简单上传。可自行设置，非必须 */,
+      //   5 /* 触发分块上���的阈值，超过5MB使用分块上传，小于5MB使用 简单上传。可自行设置，非必须 */,
       onProgress: function (progressData) {
         // console.log(JSON.stringify(progressData));
         progress.value = Math.round((progressData.loaded / progressData.total) * 100)
