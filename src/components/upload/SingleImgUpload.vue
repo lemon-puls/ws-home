@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed, defineProps, defineEmits, withDefaults } from 'vue'
-import { cos, generateUUID } from '@/utils/CosUtils'
+import { cos, generateUUID, deleteCosFile } from '@/utils/CosUtils'
 import { Plus } from '@element-plus/icons-vue'
 
 import { type UploadFile, type UploadFiles, type UploadRequestHandler } from 'element-plus'
@@ -87,23 +87,15 @@ const uploadFile = (option) => {
   )
 }
 
-const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
+const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
   console.log('上传成功：', response, uploadFile, uploadFiles)
   // 删除 COS 上的旧图片
   if (imageUrl.value) {
-    const oldKey = imageUrl.value.substring(imageUrl.value.lastIndexOf('/') + 1)
-    cos.deleteObject(
-      {
-        Bucket: import.meta.env.VITE_COS_BUCKET,
-        Region: import.meta.env.VITE_COS_REGION,
-        Key: oldKey
-      },
-      function (err, data) {
-        if (err) {
-          console.error('delete old image error：', err)
-        }
-      }
-    )
+    try {
+      await deleteCosFile(imageUrl.value)
+    } catch (err) {
+      console.error('删除旧图片失败:', err)
+    }
   }
 
   uploadFile.url = response
