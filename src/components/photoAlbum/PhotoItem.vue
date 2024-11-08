@@ -12,9 +12,12 @@ const props = defineProps({
 
 let $emit = defineEmits(['update:modelValue'])
 import { Plus } from '@element-plus/icons-vue'
-import { cos, generateUUID } from '@/utils/CosUtils'
+import { cos, generateUUID, deleteCosFile } from '@/utils/CosUtils'
 import type { UploadFile, UploadFiles } from 'element-plus'
 import ImgPreviewer from '@/components/preview/ImgPreviewer.vue'
+import { useAlbumStore } from '@/stores/album'
+import { ElMessage } from 'element-plus'
+import { Service } from '../../../generated'
 
 // const isEditing = ref(false) // 控制编辑状态
 const selectedImages = ref<number[]>([]) // 选中的图片索引
@@ -85,13 +88,32 @@ const uploadFile = (option) => {
   )
 }
 
-const handleSuccess = (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
+const albumStore = useAlbumStore()
+
+const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
   console.log('上传成功：', response, uploadFile, uploadFiles)
   uploadFile.url = response
-  // TODO 调用后端接口保存图片地址
 
-  // 将图片地址添加到图片列表前面
-  props.imgList.unshift(response)
+  try {
+    // 调用后端接口保存图片地址
+    const res = await Service.postAlbumImg({
+      album_id: albumStore.currentAlbumId,
+      urls: [response]
+    })
+    if (res.code === 0) {
+      // 将图片地址添加到图片列表前面
+      props.imgList.unshift(response)
+      ElMessage.success('图片添加成功')
+    } else {
+      // 保存失败,删除 COS 上的图片
+      await deleteCosFile(response)
+      ElMessage.error('保存图片失败:' + res.msg)
+    }
+  } catch (error) {
+    // 发生异常,删除 COS 上的图片
+    await deleteCosFile(response)
+    ElMessage.error('保存图片失败')
+  }
 }
 </script>
 
