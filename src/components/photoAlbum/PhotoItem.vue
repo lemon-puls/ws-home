@@ -221,7 +221,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       :is-editing="props.modelValue"
       :class="{ selected: selectedImages.includes(img.id) }"
       :style="{
-        width: '250px',
+        width: 'clamp(150px, 12vw, 220px)',
         height: 'auto',
         margin: '10px'
       }"
