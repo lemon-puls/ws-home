@@ -232,6 +232,13 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
 
 <style lang="scss">
 #photoItemId {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+
   .photo-upload-btn {
     display: inline-block;
     width: 150px;
