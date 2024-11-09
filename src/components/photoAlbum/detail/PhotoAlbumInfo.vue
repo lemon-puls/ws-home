@@ -37,6 +37,14 @@ const editForm = ref({
 
 // 保存编辑
 const saveEdit = async () => {
+  // 检查内容是否有变化
+  if (
+    editForm.value.title === props.albumInfo.title &&
+    editForm.value.description === props.albumInfo.description
+  ) {
+    return // 内容没有变化,直接返回
+  }
+
   try {
     const res = await Service.postAlbum({
       id: albumStore.currentAlbumId,
