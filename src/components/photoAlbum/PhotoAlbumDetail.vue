@@ -51,7 +51,6 @@
         <PhotoItem
           v-model="isEditing"
           :is-compress="isCompress"
-          :img-list="imgList"
           ref="photoItemRef"
         />
       </div>
@@ -134,8 +133,6 @@ const albumInfo = ref({
   photoCount: 0
 })
 
-// 图片列表
-const imgList = ref<string[]>([])
 
 // 获取相册详情
 const getAlbumDetail = async (albumId: number) => {
@@ -154,8 +151,6 @@ const getAlbumDetail = async (albumId: number) => {
         },
         photoCount: data.photo_count || data.album_imgs?.length || 0
       }
-      // 更新图片列表
-      imgList.value = data.album_imgs?.map((img) => img.url) || []
     }
   } catch (error) {
     console.error('获取相册详情失败:', error)
@@ -186,6 +181,6 @@ let isEditing = ref(false)
 let isCompress = ref(true)
 
 const deleteImgs = () => {
-  alert(photoItemRef.value.isEditing)
+  photoItemRef.value.deleteSelectedImages()
 }
 </script>

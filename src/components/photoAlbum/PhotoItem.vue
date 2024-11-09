@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ref, defineExpose, defineProps, PropType } from 'vue'
+import { ref, defineExpose, defineProps, onMounted, watch } from 'vue'
+import { useAlbumStore } from '@/stores/album'
+
+const albumStore = useAlbumStore()
 
 const props = defineProps({
   modelValue: Boolean,
-  isCompress: Boolean,
-  imgList: {
-    type: Array as PropType<string[]>,
-    default: () => []
-  }
+  isCompress: Boolean
 })
 
 let $emit = defineEmits(['update:modelValue'])
@@ -15,33 +14,112 @@ import { Plus } from '@element-plus/icons-vue'
 import { cos, generateUUID, deleteCosFile } from '@/utils/CosUtils'
 import type { UploadFile, UploadFiles } from 'element-plus'
 import ImgPreviewer from '@/components/preview/ImgPreviewer.vue'
-import { useAlbumStore } from '@/stores/album'
 import { ElMessage } from 'element-plus'
 import { Service } from '../../../generated'
 
-// const isEditing = ref(false) // 控制编辑状态
-const selectedImages = ref<number[]>([]) // 选中的图片索引
+const selectedImages = ref<number[]>([])
+interface AlbumImage {
+  id: number
+  url: string
+}
+const imgList = ref<AlbumImage[]>([])
+const loading = ref(false)
+const cursor = ref('')
+const isLast = ref(false)
+const pageSize = 20
+
+// 获取图片列表
+const getImgList = async () => {
+  if (loading.value || isLast.value) return
+
+  loading.value = true
+  try {
+    const res = await Service.postAlbumImgList({
+      album_id: albumStore.currentAlbumId,
+      cursor: cursor.value,
+      pageSize: pageSize
+    })
+
+    if (res.code === 0) {
+      const newImages = res.data.data.map((item) => ({
+        id: item.id,
+        url: item.url
+      }))
+      imgList.value.push(...newImages)
+
+      cursor.value = res.data.cursor
+      isLast.value = res.data.isLast
+    } else {
+      ElMessage.error('获取图片列表失败:' + res.msg)
+    }
+  } catch (error) {
+    console.error('获取图片列表失败:', error)
+    ElMessage.error('获取图片列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 监听滚动到底部
+const handleScroll = (e: Event) => {
+  console.log('handleScroll')
+  const target = e.target as HTMLElement
+  if (target.scrollHeight - target.scrollTop - target.clientHeight < 50) {
+    console.log('scroll to bottom')
+    getImgList()
+  }
+}
+
+// 监听相册ID变化,重新加载图片列表
+watch(
+  () => albumStore.currentAlbumId,
+  (newId) => {
+    if (newId) {
+      imgList.value = [] // 清空原有列表
+      cursor.value = '' // 重置游标
+      isLast.value = false // 重置结束标志
+      getImgList() // 重新加载
+    }
+  }
+)
+
+onMounted(() => {
+  if (albumStore.currentAlbumId) {
+    getImgList()
+  }
+})
 
 const toggleEdit = () => {
   $emit('update:modelValue', !props.modelValue)
   selectedImages.value = [] // 退出编辑模式时清空选中状态
 }
 
-const toggleSelection = (index: number) => {
-  if (selectedImages.value.includes(index)) {
-    selectedImages.value = selectedImages.value.filter((i) => i !== index)
+const toggleSelection = (imageId: number) => {
+  if (selectedImages.value.includes(imageId)) {
+    selectedImages.value = selectedImages.value.filter((id) => id !== imageId)
   } else {
-    selectedImages.value.push(index)
+    selectedImages.value.push(imageId)
   }
 }
 
-const deleteSelectedImages = () => {
-  alert('删除功能暂未实现')
-  // imgList.value = imgList.value.filter((_, index) => !selectedImages.value.includes(index))
-  // selectedImages.value = [] // 删除后清空选中状态
+const deleteSelectedImages = async () => {
+  try {
+    const res = await Service.deleteAlbumImg(selectedImages.value.join(','))
+
+    if (res.code === 0) {
+      // 从列表中移除已删除的图片
+      imgList.value = imgList.value.filter((img) => !selectedImages.value.includes(img.id))
+      selectedImages.value = []
+      ElMessage.success('删除成功')
+    } else {
+      ElMessage.error('删除失败:' + res.msg)
+    }
+  } catch (error) {
+    console.error('删除图片失败:', error)
+    ElMessage.error('删除失败')
+  }
 }
 
-const addImgs = () => {}
 
 //组件内部数据对外关闭的，别人不能访问
 //如果想让外部访问需要通过defineExpose方法对外暴露
@@ -88,8 +166,6 @@ const uploadFile = (option) => {
   )
 }
 
-const albumStore = useAlbumStore()
-
 const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
   console.log('上传成功：', response, uploadFile, uploadFiles)
   uploadFile.url = response
@@ -102,7 +178,10 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     })
     if (res.code === 0) {
       // 将图片地址添加到图片列表前面
-      props.imgList.unshift(response)
+      imgList.value.unshift({
+        id: res.data[response].id,
+        url: response
+      })
       ElMessage.success('图片添加成功')
     } else {
       // 保存失败,删除 COS 上的图片
@@ -118,7 +197,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
 </script>
 
 <template>
-  <div id="photoItemId" style="overflow: scroll; height: 100%">
+  <div id="photoItemId" style="overflow: scroll; height: 100%" @scroll="handleScroll">
     <!--    <button v-if="isEditing" @click="deleteSelectedImages">删除选中图片</button>-->
     <el-upload
       v-model:file-list="fileList"
@@ -133,19 +212,19 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       </div>
     </el-upload>
     <ImgPreviewer
-      v-for="(img, index) in props.imgList"
-      :key="index"
-      :src="img"
-      :preview-src-list="props.imgList"
+      v-for="(img, index) in imgList"
+      :key="img.id"
+      :src="img.url"
+      :preview-src-list="imgList.map((item) => item.url)"
       :initial-index="index"
       :is-editing="props.modelValue"
-      :class="{ selected: selectedImages.includes(index) }"
+      :class="{ selected: selectedImages.includes(img.id) }"
       :style="{
         width: '250px',
         height: 'auto',
         margin: '10px'
       }"
-      @select="toggleSelection(index)"
+      @select="toggleSelection(img.id)"
     />
   </div>
 </template>
