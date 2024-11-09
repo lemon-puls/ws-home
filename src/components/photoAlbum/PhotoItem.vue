@@ -104,9 +104,23 @@ const toggleSelection = (imageId: number) => {
 
 const deleteSelectedImages = async () => {
   try {
+    // 先获取要删除的图片 URL
+    const urlsToDelete = imgList.value
+      .filter((img) => selectedImages.value.includes(img.id))
+      .map((img) => img.url)
+
+    // 调用后端删除图片记录
     const res = await Service.deleteAlbumImg(selectedImages.value.join(','))
 
     if (res.code === 0) {
+      // 删除成功后，删除 COS 上的文件
+      try {
+        await Promise.all(urlsToDelete.map((url) => deleteCosFile(url)))
+      } catch (error) {
+        console.error('删除 COS 文件失败:', error)
+        // TODO 即使 COS 删除失败，也不影响用户体验，只在控制台打印错误 后续再考虑更优的解决方案
+      }
+
       // 从列表中移除已删除的图片
       imgList.value = imgList.value.filter((img) => !selectedImages.value.includes(img.id))
       selectedImages.value = []
