@@ -5,6 +5,7 @@ import { routes } from '@/router'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import UserInfoEdit from '@/components/user/UserInfoEdit.vue'
+import { SwitchButton } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -25,6 +26,13 @@ const handleSelect = (key: string) => {
 }
 
 const showUserEdit = ref(false)
+
+const handleCommand = (command: string) => {
+  if (command === 'logout') {
+    userStore.logout()
+    window.location.reload()
+  }
+}
 </script>
 
 <template>
@@ -50,13 +58,25 @@ const showUserEdit = ref(false)
       </el-col>
       <el-col :span="4">
         <div class="user-info">
-          <el-avatar
-            :size="40"
-            :src="loginUser.avatar"
-            @click="showUserEdit = true"
-            style="cursor: pointer"
-          />
-          <el-text class="w-150px mb-2" truncated>{{ loginUser.userName }}</el-text>
+          <el-dropdown trigger="contextmenu" @command="handleCommand">
+            <div class="avatar-wrapper">
+              <el-avatar
+                :size="40"
+                :src="loginUser.avatar"
+                @click="showUserEdit = true"
+                style="cursor: pointer"
+              />
+              <el-text class="w-150px mb-2" truncated>{{ loginUser.userName }}</el-text>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="logout">
+                  <el-icon><SwitchButton /></el-icon>
+                  退出登录
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </el-col>
     </el-row>
@@ -82,6 +102,12 @@ const showUserEdit = ref(false)
     column-gap: 10px;
     height: 100%;
     padding-right: 20px;
+
+    .avatar-wrapper {
+      display: flex;
+      align-items: center;
+      column-gap: 10px;
+    }
   }
 
   // 设置了也不生效，不设置也没影响
@@ -95,5 +121,11 @@ const showUserEdit = ref(false)
   //   display: flex;
   //   align-items: center;
   // }
+
+  :deep(.el-dropdown-menu__item) {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
 }
 </style>
