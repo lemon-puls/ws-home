@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineExpose, defineProps, onMounted, watch } from 'vue'
+import { ref, defineExpose, defineProps, defineEmits, onMounted, watch } from 'vue'
 import { useAlbumStore } from '@/stores/album'
 
 const albumStore = useAlbumStore()
@@ -9,7 +9,7 @@ const props = defineProps({
   isCompress: Boolean
 })
 
-let $emit = defineEmits(['update:modelValue'])
+let $emit = defineEmits(['update:modelValue', 'onUpdate'])
 import { Plus } from '@element-plus/icons-vue'
 import { cos, generateUUID, deleteCosFile } from '@/utils/CosUtils'
 import type { UploadFile, UploadFiles } from 'element-plus'
@@ -111,6 +111,7 @@ const deleteSelectedImages = async () => {
       imgList.value = imgList.value.filter((img) => !selectedImages.value.includes(img.id))
       selectedImages.value = []
       ElMessage.success('删除成功')
+      $emit('onUpdate') // 触发更新事件
     } else {
       ElMessage.error('删除失败:' + res.msg)
     }
@@ -119,7 +120,6 @@ const deleteSelectedImages = async () => {
     ElMessage.error('删除失败')
   }
 }
-
 
 //组件内部数据对外关闭的，别人不能访问
 //如果想让外部访问需要通过defineExpose方法对外暴露
@@ -183,6 +183,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
         url: response
       })
       ElMessage.success('图片添加成功')
+      $emit('onUpdate') // 触发更新事件
     } else {
       // 保存失败,删除 COS 上的图片
       await deleteCosFile(response)

@@ -51,6 +51,7 @@
         <PhotoItem
           v-model="isEditing"
           :is-compress="isCompress"
+          @onUpdate="() => getAlbumDetail(albumStore.currentAlbumId)"
           ref="photoItemRef"
         />
       </div>
