@@ -247,6 +247,14 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     border-radius: 10px;
     border: 2px dashed #ccc;
     position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.05);
+      border-color: var(--el-color-primary);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
 
     &-icon {
       width: 25px;
@@ -257,6 +265,12 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      transition: all 0.3s ease;
+    }
+
+    &:hover &-icon {
+      color: var(--el-color-primary);
+      transform: translate(-50%, -50%) rotate(180deg);
     }
   }
 
