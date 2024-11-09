@@ -111,12 +111,12 @@ onMounted(() => {
             </div>
           </div>
           <div class="photo-manager-content-search-right">
-            <el-switch
-              v-model="value1"
-              class="mb-2"
-              active-text="相册视图"
-              inactive-text="相片视图"
-            />
+<!--            <el-switch-->
+<!--              v-model="value1"-->
+<!--              class="mb-2"-->
+<!--              active-text="相册视图"-->
+<!--              inactive-text="相片视图"-->
+<!--            />-->
           </div>
         </div>
         <div class="photo-manager-content-list">
