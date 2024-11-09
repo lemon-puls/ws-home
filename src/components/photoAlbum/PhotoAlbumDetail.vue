@@ -147,7 +147,7 @@ const getAlbumDetail = async (albumId: number) => {
         description: data.description,
         createTime: data.create_time,
         author: {
-          avatar: 'https://example.com/avatar.jpg', // 这里可以设置默认头像
+          avatar: data.user?.avatar || '', // 这里可以设置默认头像
           username: data.user?.userName || '未知用户'
         },
         photoCount: data.photo_count || data.album_imgs?.length || 0
