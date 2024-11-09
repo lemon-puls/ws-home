@@ -22,7 +22,7 @@
         label-width="5em"
         class="login-form"
       >
-        <el-form-item label="用户名" prop="userName" v-show="!isLogin">
+        <el-form-item label="用户名" prop="userName" v-if="!isLogin">
           <el-input v-model="ruleForm.userName" :placeholder="isLogin ? '' : '请输入用户名'" />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
@@ -39,7 +39,7 @@
             placeholder="请输入密码"
           />
         </el-form-item>
-        <el-form-item v-show="!isLogin" label="确认密码" prop="checkPass">
+        <el-form-item v-if="!isLogin" label="确认密码" prop="checkPass">
           <el-input
             v-model="ruleForm.checkPass"
             type="password"
@@ -221,13 +221,17 @@ const rules = reactive<FormRules<typeof ruleForm>>({
 
 const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  formEl.validate((valid) => {
-    if (valid) {
-      console.log('submit!')
-    } else {
-      console.log('error submit!')
-    }
+
+  // 先进行表单验证
+  let valid = false
+  await formEl.validate((isValid) => {
+    valid = isValid
   })
+
+  if (!valid) {
+    console.log('表单验证失败')
+    return
+  }
 
   if (isLogin.value) {
     // 登陆
@@ -253,7 +257,28 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     }
   } else {
     // 注册
-    alert('注册功能暂未开放')
+    try {
+      const res = await Service.postUserRegister({
+        phone: ruleForm.phone,
+        password: ruleForm.pass,
+        userName: ruleForm.userName
+      })
+
+      if (res.code === 0) {
+        ElMessage.success('注册成功，请登录')
+        // 清空表单
+        // 直接使用 resetForm 会报错：not found resetFields function on formEl
+        // resetForm(ruleFormRef)
+        formEl.resetFields()
+        // 注册成功后切换到登录状态
+        isLogin.value = true
+      } else {
+        ElMessage.error('注册失败: ' + res.msg)
+      }
+    } catch (error) {
+      console.error('注册失败:', error)
+      ElMessage.error('注册失败，请稍后重试')
+    }
   }
 }
 
