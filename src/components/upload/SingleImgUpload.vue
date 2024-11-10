@@ -18,12 +18,15 @@ const props = withDefaults(
     shape?: 'circle' | 'square'
     // 边框圆角
     borderRadius?: string | number
+    // 上传路径前缀
+    pathPrefix?: string
   }>(),
   {
     width: '178px',
     height: '178px',
     shape: 'square',
-    borderRadius: '6px'
+    borderRadius: '6px',
+    pathPrefix: ''
   }
 )
 
@@ -61,6 +64,8 @@ const uploadFile = (option) => {
       Bucket: import.meta.env.VITE_COS_BUCKET /* 填写自己的 bucket，必须字段 */,
       Region: import.meta.env.VITE_COS_REGION /* 存储桶所在地域，必须字段 */,
       Key:
+        import.meta.env.VITE_COS_PATH_PREFIX +
+        props.pathPrefix +
         generateUUID() +
         suffix /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */,
       Body: option.file, // 上传文件对象

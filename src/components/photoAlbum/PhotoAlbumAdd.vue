@@ -38,13 +38,13 @@
           />
         </el-form-item>
         <el-form-item label="上传封面" prop="coverImgUrl">
-          <SingleImgUpload v-model="ruleForm.coverImgUrl" />
+          <SingleImgUpload path-prefix="album/cover/" v-model="ruleForm.coverImgUrl" />
         </el-form-item>
         <el-form-item label="开启压缩" prop="isCompress">
           <el-switch v-model="ruleForm.isCompress" :active-icon="Check" :inactive-icon="Close" />
         </el-form-item>
         <el-form-item label="图片上传" prop="albumImgs">
-          <MutilImgUpload v-model="ruleForm.albumImgs" :is-compress="ruleForm.isCompress" />
+          <MutilImgUpload path-prefix="album/" v-model="ruleForm.albumImgs" :is-compress="ruleForm.isCompress" />
         </el-form-item>
         <el-form-item id="submitBtn">
           <el-button type="primary" @click="submitForm(ruleFormRef)"> 创建</el-button>

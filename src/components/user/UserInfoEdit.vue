@@ -9,7 +9,7 @@
     <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" class="user-form">
       <el-form-item label="头像" prop="avatar">
         <!-- 圆形头像 -->
-        <SingleImgUpload v-model="form.avatar" :width="100" :height="100" shape="circle" />
+        <SingleImgUpload path-prefix="avatar/" v-model="form.avatar" :width="100" :height="100" shape="circle" />
       </el-form-item>
 
       <el-form-item label="用户名" prop="userName">

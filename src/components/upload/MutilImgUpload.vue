@@ -14,10 +14,17 @@ import { compressImage } from '@/utils/FileUtils'
 import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 
 // 定义 props - 接收字符串数组
-const props = defineProps<{
-  modelValue: string[]
-  isCompress?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: string[]
+    isCompress?: boolean
+    pathPrefix?: string
+  }>(),
+  {
+    isCompress: true,
+    pathPrefix: ''
+  }
+)
 
 // 定义 emits
 const emit = defineEmits<{
@@ -96,6 +103,8 @@ const uploadFile = (option) => {
       Bucket: import.meta.env.VITE_COS_BUCKET /* 填写自己的 bucket，必须字段 */,
       Region: import.meta.env.VITE_COS_REGION /* 存储桶所在地域，必须字段 */,
       Key:
+        import.meta.env.VITE_COS_PATH_PREFIX +
+        props.pathPrefix +
         generateUUID() +
         suffix /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */,
       Body: option.file, // 上传文件对象
