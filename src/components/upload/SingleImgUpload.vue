@@ -62,7 +62,7 @@ const ajaxUpload: UploadRequestHandler = (option) => {
     option.file = uploadFileObj
     uploadFile(option)
   })
-  return Promise.resolve()
+  return new Promise(() => {})
 }
 
 const uploadFile = (option: any) => {
