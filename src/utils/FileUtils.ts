@@ -12,8 +12,8 @@ export const compressImage = (file: File): Promise<File> => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-        const maxWidth = 800; // 压缩后的最大宽度
-        const maxHeight = 800; // 压缩后的最大高度
+        const maxWidth = 1500; // 压缩后的最大宽度
+        const maxHeight = 1500; // 压缩后的最大高度
         let width = img.width;
         let height = img.height;
 
@@ -36,7 +36,7 @@ export const compressImage = (file: File): Promise<File> => {
             resolve(compressedFile);
           },
           "image/jpeg",
-          0.5
+          0.9
         ); // 控制压缩质量，范围为 0 - 1，数值越小质量越差
       };
     };
