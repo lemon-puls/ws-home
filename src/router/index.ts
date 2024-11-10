@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import PhotoManagerView from '@/views/PhotoManagerView.vue'
 
 const routes =  [
