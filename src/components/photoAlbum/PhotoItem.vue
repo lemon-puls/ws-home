@@ -28,6 +28,9 @@ const cursor = ref('')
 const isLast = ref(false)
 const pageSize = 20
 
+const uploadingCount = ref(0)
+const totalUploadCount = ref(0)
+
 // 获取图片列表
 const getImgList = async () => {
   if (loading.value || isLast.value) return
@@ -184,6 +187,12 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   console.log('上传成功：', response, uploadFile, uploadFiles)
   uploadFile.url = response
 
+  // 如果是新的上传批次，重置计数器
+  if (uploadingCount.value === 0) {
+    totalUploadCount.value = uploadFiles.length
+  }
+  uploadingCount.value++
+
   try {
     // 调用后端接口保存图片地址
     const res = await Service.postAlbumImg({
@@ -196,17 +205,24 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
         id: res.data[response].id,
         url: response
       })
-      ElMessage.success('图片添加成功')
-      $emit('onUpdate') // 触发更新事件
+
+      // 只在所有图片都上传完成时显示成功消息
+      if (uploadingCount.value === totalUploadCount.value) {
+        ElMessage.success(`${totalUploadCount.value}张图片添加成功`)
+        uploadingCount.value = 0 // 重置计数器
+        $emit('onUpdate') // 触发更新事件
+      }
     } else {
       // 保存失败,删除 COS 上的图片
       await deleteCosFile(response)
       ElMessage.error('保存图片失败:' + res.msg)
+      uploadingCount.value = 0 // 重置计数器
     }
   } catch (error) {
     // 发生异常,删除 COS 上的图片
     await deleteCosFile(response)
     ElMessage.error('保存图片失败')
+    uploadingCount.value = 0 // 重置计数器
   }
 }
 </script>
