@@ -41,7 +41,7 @@
           <SingleImgUpload path-prefix="album/cover/" v-model="ruleForm.coverImgUrl" />
         </el-form-item>
         <el-form-item label="开启压缩" prop="isCompress">
-          <el-switch v-model="ruleForm.isCompress" :active-icon="Check" :inactive-icon="Close" />
+          <el-switch v-model="ruleForm.isCompress" />
         </el-form-item>
         <el-form-item label="图片上传" prop="albumImgs">
           <MutilImgUpload path-prefix="album/" v-model="ruleForm.albumImgs" :is-compress="ruleForm.isCompress" />

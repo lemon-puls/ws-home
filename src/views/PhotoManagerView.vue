@@ -5,7 +5,7 @@ import SvgIcon from '@/icons/SvgIcon'
 import { useAlbumStore } from '@/stores/album'
 import { ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Service } from '../../generated'
+import { Service, type vo_AlbumVO } from '../../generated'
 
 const albumStore = useAlbumStore()
 
@@ -16,7 +16,7 @@ const imgList = [
 ]
 
 // 相册列表
-const albumList = ref([])
+const albumList = ref<vo_AlbumVO[]>([])
 // 分页参数
 const currentPage = ref(1)
 const pageSize = ref(20)
@@ -42,7 +42,7 @@ const getAlbumList = async () => {
     } else {
       ElMessage.error('获取相册列表失败:' + res.msg)
     }
-  } catch (error) {
+  } catch (error: any) {
     ElMessage.error(error.message)
   }
 }

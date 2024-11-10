@@ -1,5 +1,5 @@
 <template>
-  <div class="overlay" v-if="true" @click="handleClickOutside"></div>
+  <div class="overlay" v-if="true"></div>
   <transition
     enter-active-class="animate__animated animate__backInLeft"
     leave-active-class="animate__animated animate__backOutRight"
@@ -210,7 +210,8 @@ const ruleForm = reactive({
   pass: '',
   checkPass: '',
   phone: '',
-  userName: ''
+  userName: '',
+  age: ''
 })
 
 const rules = reactive<FormRules<typeof ruleForm>>({

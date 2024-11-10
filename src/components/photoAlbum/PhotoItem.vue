@@ -16,6 +16,7 @@ import type { UploadFile, UploadFiles } from 'element-plus'
 import ImgPreviewer from '@/components/preview/ImgPreviewer.vue'
 import { ElMessage } from 'element-plus'
 import { Service } from '../../../generated'
+import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 
 const selectedImages = ref<number[]>([])
 interface AlbumImage {
@@ -44,7 +45,7 @@ const getImgList = async () => {
     })
 
     if (res.code === 0) {
-      const newImages = res.data.data.map((item) => ({
+      const newImages = res.data.data.map((item: any) => ({
         id: item.id,
         url: item.url
       }))
@@ -145,7 +146,7 @@ defineExpose({
   toggleEdit
 })
 
-const uploadFile = (option) => {
+const uploadFile = (option: any) => {
   console.log('开始上传文件, 压缩：', props.isCompress)
   // 文件后缀
   const suffix = option.file.name.slice(option.file.name.lastIndexOf('.'))
@@ -165,17 +166,17 @@ const uploadFile = (option) => {
       //   5 /* 触发分块上传的阈值，超过5MB使用分块上传，小于5MB使用 简单上传。可自行设置，非必须 */,
       onProgress: function (progressData) {
         // console.log(JSON.stringify(progressData));
-        progress.value = Math.round((progressData.loaded / progressData.total) * 100)
-        console.log('上传进度：', progress.value)
+        let progress = Math.round((progressData.loaded / progressData.total) * 100)
+        console.log('上传进度：', progress)
         option.onProgress({
-          percent: progress.value
+          percent: progress
         })
       }
     },
     function (err, data) {
       if (err) {
         console.error('上传失败：', err)
-        option.onError(new UploadAjaxError(err.message, err.statusCode, err.method, err.url))
+        option.onError(new UploadAjaxError(err.message, err?.statusCode?? 0, err.method, err.url))
       } else {
         console.log('上传成功 COS：', data)
         const downloadUrl = 'https://' + data.Location
@@ -233,7 +234,6 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   <div id="photoItemId" style="overflow: scroll; height: 100%" @scroll="handleScroll">
     <!--    <button v-if="isEditing" @click="deleteSelectedImages">删除选中图片</button>-->
     <el-upload
-      v-model:file-list="fileList"
       class="upload-demo"
       :http-request="uploadFile"
       :on-success="handleSuccess"

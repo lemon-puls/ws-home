@@ -5,6 +5,7 @@ import { Plus } from '@element-plus/icons-vue'
 
 import { type UploadFile, type UploadFiles, type UploadRequestHandler } from 'element-plus'
 import { compressImage } from '@/utils/FileUtils'
+import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 
 // 定义 props
 const props = withDefaults(
@@ -49,14 +50,22 @@ const ajaxUpload: UploadRequestHandler = (option) => {
   console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
 
   compressImage(option.file).then((compressedFile: File) => {
-    console.log('压缩后：', compressedFile.size / (1024 * 1024).toFixed(2) + ' MB')
-    option.file = compressedFile
+    const sizeInMB = (compressedFile.size / (1024 * 1024)).toFixed(2)
+    console.log('压缩后：', sizeInMB + ' MB')
+
+    // 创建一个新对象，包含压缩后的文件和原始文件的 uid
+    const uploadFileObj = new File([compressedFile], compressedFile.name, {
+      type: compressedFile.type
+    }) as any
+    uploadFileObj.uid = option.file.uid
+
+    option.file = uploadFileObj
     uploadFile(option)
   })
-  return null
+  return Promise.resolve()
 }
 
-const uploadFile = (option) => {
+const uploadFile = (option: any) => {
   // 文件后缀
   const suffix = option.file.name.slice(option.file.name.lastIndexOf('.'))
   cos.uploadFile(
@@ -75,15 +84,15 @@ const uploadFile = (option) => {
       //   5 /* 触发分块上传的阈值，超过5MB使用分块上传，小于5MB使用 简单上传。可自行设置，非必须 */,
       onProgress: function (progressData) {
         // console.log(JSON.stringify(progressData));
-        progress.value = Math.round((progressData.loaded / progressData.total) * 100)
+        let progress = Math.round((progressData.loaded / progressData.total) * 100)
         option.onProgress({
-          percent: progress.value
+          percent: progress
         })
       }
     },
     function (err, data) {
       if (err) {
-        option.onError(new UploadAjaxError(err.message, err.statusCode, err.method, err.url))
+        option.onError(new UploadAjaxError(err.message, err?.statusCode ?? 0, err.method, err.url))
       } else {
         const downloadUrl = 'https://' + data.Location
         option.onSuccess(downloadUrl)
@@ -120,7 +129,7 @@ const imageStyle = computed(() => {
         : typeof props.borderRadius === 'number'
           ? `${props.borderRadius}px`
           : props.borderRadius,
-    objectFit: 'cover'
+    objectFit: 'cover' as const
   }
   console.log('imageStyle', style)
   return style

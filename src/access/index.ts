@@ -1,8 +1,8 @@
 import router from "@/router";
 import ACCESS_ENUM from "@/access/accessEnum";
 import checkAccess from "@/access/checkAccess";
-import message from "@arco-design/web-vue/es/message";
-import { useUserStore } from "@/store/user";
+import { useUserStore } from '@/stores/user'
+
 
 router.beforeEach(async (to, from, next) => {
   // console.log("登录用户信息：", store.state.user.loginUser);
@@ -29,12 +29,10 @@ router.beforeEach(async (to, from, next) => {
       loginUser.userRole === ACCESS_ENUM.NOT_LOGIN
     ) {
       next(`/txing/user/login?redirect=${to.fullPath}`);
-      message.info("请先登录！");
       return;
     }
     // 已经登录 但是没有对应权限
     if (!checkAccess(loginUser, needAccess)) {
-      message.info("权限不足");
       next("/txing/noAuth");
       return;
     }

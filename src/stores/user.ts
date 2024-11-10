@@ -14,7 +14,10 @@ export const useUserStore = defineStore(
       userName: '未登录',
       avatar:
         'https://p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/3ee5f13fb09879ecb5185e440cef6eb9.png~tplv-uwbnlip3yd-webp.webp',
-      phone: ''
+      phone: '',
+      email: '',
+      gender: 0,
+      age: 18,
     }
     // 注意这里不要直接 ref(unLoginUser)，因为这样会导致 loginUser 和 unLoginUser 共享同一个引用。
     // 当我们修改 loginUser 的值时，unLoginUser 的值也会被修改。
@@ -28,7 +31,7 @@ export const useUserStore = defineStore(
       },
       set: (val) => {
         if (!val) {
-          Object.assign(loginUser.value, payload)
+          Object.assign(loginUser.value, unLoginUser)
         }
       }
     })

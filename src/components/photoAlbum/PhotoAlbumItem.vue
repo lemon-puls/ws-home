@@ -12,7 +12,7 @@
         <SvgIcon class="footer-author-icon" icon="author"></SvgIcon>
         <span class="footer-author-name">{{ album.user?.userName }}</span>
       </div>
-      <span class="footer-date">{{ formatDate(album.create_time) }}</span>
+      <span class="footer-date">{{ formatDate(album?.create_time?? '') }}</span>
     </div>
   </div>
 </template>
@@ -20,29 +20,11 @@
 <script setup lang="ts">
 import { defineProps } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
+import type { vo_AlbumVO } from '../../../generated'
 
-interface User {
-  userId: number
-  userName: string
-  email: string
-  phone: string
-}
-
-interface Album {
-  id: number
-  create_time: string
-  update_time: string
-  name: string
-  description: string
-  user_id: number
-  cover_img: string
-  user: User
-  photos?: any[]
-  photo_count: number
-}
 
 const props = defineProps<{
-  album: Album
+  album: vo_AlbumVO
 }>()
 
 const formatDate = (dateStr: string) => {

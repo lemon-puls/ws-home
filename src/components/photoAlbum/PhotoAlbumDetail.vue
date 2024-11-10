@@ -138,7 +138,7 @@ const albumInfo = ref({
 // 获取相册详情
 const getAlbumDetail = async (albumId: number) => {
   try {
-    const res = await Service.getAlbum(albumId)
+    const res = await Service.getAlbum(albumId.toString())
     if (res.code === 0) {
       const data = res.data
       // 更新相册信息

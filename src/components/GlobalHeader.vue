@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SvgIcon from '@/icons/SvgIcon'
 import { computed, ref } from 'vue'
-import { routes } from '@/router'
+import { routes, type RouteType } from '@/router'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import UserInfoEdit from '@/components/user/UserInfoEdit.vue'
@@ -13,8 +13,8 @@ const userStore = useUserStore()
 let loginUser = computed(() => userStore.loginUser)
 
 const visibleRoutes = computed(() => {
-  return routes.filter((item, index) => {
-    if (item.meta?.hideInMenu) {
+  return routes.filter((item: RouteType) => {
+    if (item?.meta?.hideInMenu) {
       return false
     }
     return true
