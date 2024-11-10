@@ -289,7 +289,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 10px;
 
