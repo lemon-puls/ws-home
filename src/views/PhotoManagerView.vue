@@ -106,17 +106,17 @@ onMounted(() => {
               :suffix-icon="Search"
               @keyup.enter="handleSearch"
             />
-            <div @click="handleCreate">
+            <div class="create-btn" @click="handleCreate">
               <SvgIcon icon="create" size="40px" />
             </div>
           </div>
           <div class="photo-manager-content-search-right">
-<!--            <el-switch-->
-<!--              v-model="value1"-->
-<!--              class="mb-2"-->
-<!--              active-text="相册视图"-->
-<!--              inactive-text="相片视图"-->
-<!--            />-->
+            <!--            <el-switch-->
+            <!--              v-model="value1"-->
+            <!--              class="mb-2"-->
+            <!--              active-text="相册视图"-->
+            <!--              inactive-text="相片视图"-->
+            <!--            />-->
           </div>
         </div>
         <div class="photo-manager-content-list">
@@ -176,6 +176,20 @@ onMounted(() => {
           align-items: center;
           justify-content: center;
           column-gap: 10px;
+
+          .create-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: rotate(90deg) scale(1.1);
+              filter: drop-shadow(0 0 5px rgba(64, 158, 255, 0.5));
+            }
+
+            &:active {
+              transform: scale(0.95);
+            }
+          }
         }
       }
 
