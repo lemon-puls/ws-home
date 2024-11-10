@@ -62,14 +62,14 @@
 <style lang="scss">
 /*聊天框*/
 #photoAlbumDetailId {
-  --width: 80vw;
-  --hight: 40vw;
+  --width: min(95vw, 1400px);
+  --height: min(90vh, 800px);
   width: var(--width);
-  height: var(--hight);
+  height: var(--height);
   background-color: white;
   position: fixed;
   left: calc(50% - var(--width) / 2);
-  top: calc(50% - var(--hight) / 2);
+  top: calc(50% - var(--height) / 2);
   /*transform: translateX(-50%);*/
   /*transform: translateX(-50%);*/
   z-index: 10001;
@@ -92,13 +92,51 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-right: 20px;
+    padding: 0 20px;
     box-sizing: border-box;
+
+    /* 添加响应式样式 */
+    @media (max-width: 768px) {
+      height: auto;
+      padding: 10px;
+      flex-direction: column;
+      gap: 10px;
+
+      .el-button {
+        font-size: 12px;
+        padding: 8px 15px;
+      }
+
+      .el-switch {
+        transform: scale(0.8);
+        margin-left: 0 !important;
+      }
+    }
+
+    /* 添加中等屏幕的样式 */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      padding: 0 15px;
+
+      .el-button {
+        font-size: 13px;
+        padding: 9px 18px;
+      }
+    }
   }
 
   .el-divider--vertical {
     margin: 0;
     width: 0;
+  }
+
+  /* 移动端布局切换为纵向 */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: 95vh;
+
+    .el-divider--vertical {
+      display: none;
+    }
   }
 }
 
@@ -133,7 +171,6 @@ const albumInfo = ref({
   },
   photoCount: 0
 })
-
 
 // 获取相册详情
 const getAlbumDetail = async (albumId: number) => {
