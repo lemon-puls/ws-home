@@ -232,7 +232,6 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       })
       // 只在所有图片都上传完成时显示成功消息
       if (uploadingCount.value === totalUploadCount.value) {
-        alert('所有图片上传成功')
         ElMessage.success(`${totalUploadCount.value}张图片添加成功`)
         uploadingCount.value = 0 // 重置计数器
         $emit('onUpdate') // 触发更新事件
