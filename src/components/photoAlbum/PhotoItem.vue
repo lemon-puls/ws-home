@@ -167,7 +167,7 @@ const ajaxUpload: UploadRequestHandler = (option) => {
   } else {
     uploadFile(option)
   }
-  return Promise.resolve()
+  return new Promise(() => {})
 }
 
 const uploadFile = (option: any) => {
@@ -179,7 +179,7 @@ const uploadFile = (option: any) => {
       Region: import.meta.env.VITE_COS_REGION /* 存储桶所在地域，必须字段 */,
       Key:
         import.meta.env.VITE_COS_PATH_PREFIX +
-        "ablum/" +
+        'ablum/' +
         generateUUID() +
         suffix /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */,
       Body: option.file, // 上传文件对象
@@ -198,7 +198,7 @@ const uploadFile = (option: any) => {
     function (err, data) {
       console.log('COS 上传完成回调：', err, data)
       if (err) {
-        option.onError(new UploadAjaxError(err.message, err?.statusCode?? 0, err.method, err.url))
+        option.onError(new UploadAjaxError(err.message, err?.statusCode ?? 0, err.method, err.url))
       } else {
         const downloadUrl = 'https://' + data.Location
         console.log('下载链接：', downloadUrl)
@@ -214,7 +214,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
 
   // 如果是新的上传批次，重置计数器
   if (uploadingCount.value === 0) {
-    totalUploadCount.value = uploadFiles.length
+    totalUploadCount.value = uploadFiles.length - totalUploadCount.value
   }
   uploadingCount.value++
 
@@ -230,9 +230,9 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
         id: res.data[response].id,
         url: response
       })
-
       // 只在所有图片都上传完成时显示成功消息
       if (uploadingCount.value === totalUploadCount.value) {
+        alert('所有图片上传成功')
         ElMessage.success(`${totalUploadCount.value}张图片添加成功`)
         uploadingCount.value = 0 // 重置计数器
         $emit('onUpdate') // 触发更新事件
