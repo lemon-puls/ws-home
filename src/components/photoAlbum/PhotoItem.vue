@@ -12,11 +12,12 @@ const props = defineProps({
 let $emit = defineEmits(['update:modelValue', 'onUpdate'])
 import { Plus } from '@element-plus/icons-vue'
 import { cos, generateUUID, deleteCosFile } from '@/utils/CosUtils'
-import type { UploadFile, UploadFiles } from 'element-plus'
+import type { UploadFile, UploadFiles, UploadRequestHandler } from 'element-plus'
 import ImgPreviewer from '@/components/preview/ImgPreviewer.vue'
 import { ElMessage } from 'element-plus'
 import { Service } from '../../../generated'
 import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
+import { compressImage } from '@/utils/FileUtils'
 
 const selectedImages = ref<number[]>([])
 interface AlbumImage {
@@ -146,8 +147,30 @@ defineExpose({
   toggleEdit
 })
 
+const ajaxUpload: UploadRequestHandler = (option) => {
+  const sizeInMB = option.file.size / (1024 * 1024)
+  console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
+
+  if (props.isCompress) {
+    compressImage(option.file).then((compressedFile: File) => {
+      console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
+
+      // 创建一个新对象，包含压缩后的文件和原始文件的 uid
+      const uploadFileObj = new File([compressedFile], compressedFile.name, {
+        type: compressedFile.type
+      }) as any
+      uploadFileObj.uid = option.file.uid
+      option.file = uploadFileObj
+      // 调用上传方法
+      uploadFile(option)
+    })
+  } else {
+    uploadFile(option)
+  }
+  return Promise.resolve()
+}
+
 const uploadFile = (option: any) => {
-  console.log('开始上传文件, 压缩：', props.isCompress)
   // 文件后缀
   const suffix = option.file.name.slice(option.file.name.lastIndexOf('.'))
   cos.uploadFile(
@@ -156,30 +179,29 @@ const uploadFile = (option: any) => {
       Region: import.meta.env.VITE_COS_REGION /* 存储桶所在地域，必须字段 */,
       Key:
         import.meta.env.VITE_COS_PATH_PREFIX +
-        "album/" +
+        "ablum/" +
         generateUUID() +
         suffix /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */,
       Body: option.file, // 上传文件对象
       // SliceSize:
       //   1024 *
       //   1024 *
-      //   5 /* 触发分块上传的阈值，超过5MB使用分块上传，小于5MB使用 简单上传。可自行设置，非必须 */,
+      //   5 /* 触发分块上的阈值，超过5MB使用分块上传，小于5MB使用 简单上传。可自行设置，非必须 */,
       onProgress: function (progressData) {
         // console.log(JSON.stringify(progressData));
         let progress = Math.round((progressData.loaded / progressData.total) * 100)
-        console.log('上传进度：', progress)
         option.onProgress({
           percent: progress
         })
       }
     },
     function (err, data) {
+      console.log('COS 上传完成回调：', err, data)
       if (err) {
-        console.error('上传失败：', err)
         option.onError(new UploadAjaxError(err.message, err?.statusCode?? 0, err.method, err.url))
       } else {
-        console.log('上传成功 COS：', data)
         const downloadUrl = 'https://' + data.Location
+        console.log('下载链接：', downloadUrl)
         option.onSuccess(downloadUrl)
       }
     }
@@ -235,7 +257,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     <!--    <button v-if="isEditing" @click="deleteSelectedImages">删除选中图片</button>-->
     <el-upload
       class="upload-demo"
-      :http-request="uploadFile"
+      :http-request="ajaxUpload"
       :on-success="handleSuccess"
       multiple
       :show-file-list="false"
