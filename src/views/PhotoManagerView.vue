@@ -125,6 +125,7 @@ onMounted(() => {
             :key="album.id"
             :album="album"
             @click="handleOpenAlbum(album)"
+            @update="getAlbumList"
           />
         </div>
         <div class="photo-manager-content-page">

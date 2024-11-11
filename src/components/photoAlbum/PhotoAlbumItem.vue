@@ -1,31 +1,78 @@
 <template>
-  <div id="courseItemId">
-    <div :class="{ container: true }">
-      <img :src="album.cover_img" />
-      <span>{{ album.photo_count || 0 }} p</span>
-    </div>
-    <div class="title">
-      <span>{{ album.name }}</span>
-    </div>
-    <div class="footer">
-      <div class="footer-author">
-        <SvgIcon class="footer-author-icon" icon="author"></SvgIcon>
-        <span class="footer-author-name">{{ album.user?.userName }}</span>
+  <el-popover
+    v-model:visible="showDropdown"
+    placement="bottom"
+    :width="100"
+    trigger="contextmenu"
+    popper-class="context-menu-popover"
+  >
+    <template #reference>
+      <div id="courseItemId" @click="$emit('click')">
+        <div :class="{ container: true }">
+          <img :src="album.cover_img" />
+          <span>{{ album.photo_count || 0 }} p</span>
+        </div>
+        <div class="title">
+          <span>{{ album.name }}</span>
+        </div>
+        <div class="footer">
+          <div class="footer-author">
+            <SvgIcon class="footer-author-icon" icon="author"></SvgIcon>
+            <span class="footer-author-name">{{ album.user?.userName }}</span>
+          </div>
+          <span class="footer-date">{{ formatDate(album?.create_time ?? '') }}</span>
+        </div>
       </div>
-      <span class="footer-date">{{ formatDate(album?.create_time?? '') }}</span>
+    </template>
+
+    <div class="context-menu-content">
+      <div class="menu-item delete" @click="handleDelete">
+        <el-icon><Delete /></el-icon>
+        <span>删除相册</span>
+      </div>
     </div>
-  </div>
+  </el-popover>
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, ref } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
 import type { vo_AlbumVO } from '../../../generated'
+import { Delete } from '@element-plus/icons-vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { Service } from '../../../generated'
 
+const emit = defineEmits(['update', 'click'])
 
 const props = defineProps<{
   album: vo_AlbumVO
 }>()
+
+// 右键菜单相关
+const showDropdown = ref(false)
+
+const handleDelete = async () => {
+  try {
+    await ElMessageBox.confirm('确定要删除该相册吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    const res = await Service.deleteAlbum(props.album.id.toString())
+    if (res.code === 0) {
+      ElMessage.success('删除成功')
+      emit('update') // 通知父组件更新列表
+    } else {
+      ElMessage.error('删除失败:' + res.msg)
+    }
+  } catch (error) {
+    // 用户取消删除
+    console.log('取消删除')
+  } finally {
+    showDropdown.value = false
+  }
+}
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -40,7 +87,42 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style lang="scss" scoped>
+.context-menu-content {
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #f5f7fa;
+    }
+
+    .el-icon {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    &.delete {
+      color: #ff4757;
+
+      &:hover {
+        background-color: #fff1f0;
+      }
+    }
+  }
+}
+
+:deep(.context-menu-popover) {
+  padding: 0;
+  min-width: 100px;
+}
+
 #courseItemId {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
   max-width: 250px;
   width: 20vw;
   height: auto;
@@ -139,5 +221,8 @@ const formatDate = (dateStr: string) => {
       }
     }
   }
+
+  // 添加这个样式以防止文本被选中
+  user-select: none;
 }
 </style>
