@@ -59,6 +59,11 @@ const handleDelete = async () => {
       type: 'warning'
     })
 
+    if (!props.album?.id) {
+      ElMessage.error('相册不存在')
+      return
+    }
+
     const res = await Service.deleteAlbum(props.album.id.toString())
     if (res.code === 0) {
       ElMessage.success('删除成功')
