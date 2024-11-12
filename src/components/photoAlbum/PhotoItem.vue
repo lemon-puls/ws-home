@@ -33,6 +33,47 @@ const pageSize = 20
 const uploadingCount = ref(0)
 const totalUploadCount = ref(0)
 
+// 添加一个压缩队列类
+class CompressionQueue {
+  private queue: Array<{
+    file: File
+    resolve: (file: File) => void
+    reject: (error: any) => void
+  }> = []
+  private processing = 0
+  private readonly maxConcurrent = 5
+
+  async add(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ file, resolve, reject })
+      this.processNext()
+    })
+  }
+
+  private async processNext() {
+    if (this.processing >= this.maxConcurrent || this.queue.length === 0) {
+      return
+    }
+
+    this.processing++
+    console.log('压缩队列中还有', this.queue.length, '个文件等待压缩, 正在处理中：', this.processing)
+    const { file, resolve, reject } = this.queue.shift()!
+
+    try {
+      const compressedFile = await compressImage(file)
+      resolve(compressedFile)
+    } catch (error) {
+      reject(error)
+    } finally {
+      this.processing--
+      this.processNext()
+    }
+  }
+}
+
+// 创建压缩队列实例
+const compressionQueue = new CompressionQueue()
+
 // 获取图片列表
 const getImgList = async () => {
   if (loading.value || isLast.value) return
@@ -147,23 +188,30 @@ defineExpose({
   toggleEdit
 })
 
+// 修改 ajaxUpload 函数
 const ajaxUpload: UploadRequestHandler = (option) => {
   const sizeInMB = option.file.size / (1024 * 1024)
   console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
 
   if (props.isCompress) {
-    compressImage(option.file).then((compressedFile: File) => {
-      console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
+    compressionQueue
+      .add(option.file)
+      .then((compressedFile: File) => {
+        console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
 
-      // 创建一个新对象，包含压缩后的文件和原始文件的 uid
-      const uploadFileObj = new File([compressedFile], compressedFile.name, {
-        type: compressedFile.type
-      }) as any
-      uploadFileObj.uid = option.file.uid
-      option.file = uploadFileObj
-      // 调用上传方法
-      uploadFile(option)
-    })
+        // 创建一个新对象，包含压缩后的文件和原始文件的 uid
+        const uploadFileObj = new File([compressedFile], compressedFile.name, {
+          type: compressedFile.type
+        }) as any
+        uploadFileObj.uid = option.file.uid
+        option.file = uploadFileObj
+        uploadFile(option)
+      })
+      .catch((error) => {
+        console.error('图片压缩失败:', error)
+        // 压缩失败时使用原始文件上传
+        // uploadFile(option)
+      })
   } else {
     uploadFile(option)
   }
@@ -196,12 +244,12 @@ const uploadFile = (option: any) => {
       }
     },
     function (err, data) {
-      console.log('COS 上传完成回调：', err, data)
+      // console.log('COS 上传完成回调：', err, data)
       if (err) {
         option.onError(new UploadAjaxError(err.message, err?.statusCode ?? 0, err.method, err.url))
       } else {
         const downloadUrl = 'https://' + data.Location
-        console.log('下载链接：', downloadUrl)
+        // console.log('下载链接：', downloadUrl)
         option.onSuccess(downloadUrl)
       }
     }
@@ -209,7 +257,7 @@ const uploadFile = (option: any) => {
 }
 
 const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
-  console.log('上传成功：', response, uploadFile, uploadFiles)
+  // console.log('上传成功：', response, uploadFile, uploadFiles)
   uploadFile.url = response
 
   // 如果是新的上传批次，重置计数器
