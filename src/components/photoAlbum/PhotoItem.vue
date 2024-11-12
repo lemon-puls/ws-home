@@ -56,7 +56,12 @@ class CompressionQueue {
     }
 
     this.processing++
-    console.log('压缩队列中还有', this.queue.length, '个文件等待压缩, 正在处理中：', this.processing)
+    console.log(
+      '压缩队列中还有',
+      this.queue.length,
+      '个文件等待压缩, 正在处理中：',
+      this.processing
+    )
     const { file, resolve, reject } = this.queue.shift()!
 
     try {
@@ -297,6 +302,10 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     uploadingCount.value = 0 // 重置计数器
   }
 }
+
+const handleExceed = (files: File[]) => {
+  ElMessage.warning('一次最多只能上传 50 张图片')
+}
 </script>
 
 <template>
@@ -308,9 +317,12 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       :on-success="handleSuccess"
       multiple
       :show-file-list="false"
+      :limit="50"
+      :on-exceed="handleExceed"
     >
       <div class="photo-upload-btn" v-if="props.modelValue">
         <Plus class="photo-upload-btn-icon" />
+        <span class="upload-tip">最多 50 张</span>
       </div>
     </el-upload>
     <ImgPreviewer
@@ -372,6 +384,15 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     &:hover &-icon {
       color: var(--el-color-primary);
       transform: translate(-50%, -50%) rotate(180deg);
+    }
+
+    .upload-tip {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #8c939d;
     }
   }
 
