@@ -30,19 +30,23 @@
         class=""
       >
         <div class="top-bar">
-          <div>
+          <div style="display: flex; align-items: center; gap: 20px">
+            <el-radio-group v-model="filterType" size="small">
+              <el-radio-button label="all" value="all">全部</el-radio-button>
+              <el-radio-button label="compressed" value="compressed">压缩</el-radio-button>
+              <el-radio-button label="raw" value="raw">原图</el-radio-button>
+            </el-radio-group>
             <el-switch
               v-if="isEditing"
               v-model="isCompress"
               class="mt-2"
-              style="margin-left: 24px"
               inactive-text="开启压缩"
             />
           </div>
           <div>
             <el-button v-if="isEditing" @click="deleteImgs" type="danger" round
-              >删除选定图片</el-button
-            >
+              >删除选定图片
+            </el-button>
             <el-button @click="photoItemRef.toggleEdit()" type="success" round
               >{{ isEditing ? '完成' : '编辑' }}
             </el-button>
@@ -221,4 +225,23 @@ let isCompress = ref(true)
 const deleteImgs = () => {
   photoItemRef.value.deleteSelectedImages()
 }
+
+// 筛选选项
+const filterOptions = [
+  { label: '压缩图', value: 'compressed' },
+  { label: '原图', value: 'raw' },
+  { label: '全部', value: 'all' }
+]
+
+// 筛选类型
+const filterType = ref('compressed')
+
+// 监听筛选类型变化
+watch(filterType, (newValue) => {
+  // 将筛选值传递给 PhotoItem 组件
+  if (photoItemRef.value) {
+    photoItemRef.value.resetAndRefresh(newValue)
+  }
+})
+
 </script>

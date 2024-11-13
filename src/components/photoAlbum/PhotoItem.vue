@@ -6,7 +6,7 @@ const albumStore = useAlbumStore()
 
 const props = defineProps({
   modelValue: Boolean,
-  isCompress: Boolean
+  isCompress: Boolean,
 })
 
 let $emit = defineEmits(['update:modelValue', 'onUpdate'])
@@ -23,6 +23,7 @@ const selectedImages = ref<number[]>([])
 interface AlbumImage {
   id: number
   url: string
+  is_raw: boolean
 }
 const imgList = ref<AlbumImage[]>([])
 const loading = ref(false)
@@ -79,6 +80,18 @@ class CompressionQueue {
 // 创建压缩队列实例
 const compressionQueue = new CompressionQueue()
 
+// 添加筛选类型
+const filterType = ref('compressed')
+
+// 重置并刷新列表的方法
+const resetAndRefresh = (type: string) => {
+  filterType.value = type
+  imgList.value = []
+  cursor.value = ''
+  isLast.value = false
+  getImgList()
+}
+
 // 获取图片列表
 const getImgList = async () => {
   if (loading.value || isLast.value) return
@@ -88,13 +101,15 @@ const getImgList = async () => {
     const res = await Service.postAlbumImgList({
       album_id: albumStore.currentAlbumId,
       cursor: cursor.value,
-      pageSize: pageSize
+      pageSize: pageSize,
+      is_raw: filterType.value === 'all' ? undefined : filterType.value === 'raw'
     })
 
     if (res.code === 0) {
       const newImages = res.data.data.map((item: any) => ({
         id: item.id,
-        url: item.url
+        url: item.url,
+        is_raw: item.is_raw
       }))
       imgList.value.push(...newImages)
 
@@ -190,7 +205,8 @@ const deleteSelectedImages = async () => {
 //如果想让外部访问需要通过defineExpose方法对外暴露
 defineExpose({
   deleteSelectedImages,
-  toggleEdit
+  toggleEdit,
+  resetAndRefresh
 })
 
 // 修改 ajaxUpload 函数
