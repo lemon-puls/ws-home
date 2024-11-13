@@ -44,7 +44,11 @@
           <el-switch v-model="ruleForm.isCompress" />
         </el-form-item>
         <el-form-item label="图片上传" prop="albumImgs">
-          <MutilImgUpload path-prefix="album/" v-model="ruleForm.albumImgs" :is-compress="ruleForm.isCompress" />
+          <MutilImgUpload
+            path-prefix="album/"
+            v-model="ruleForm.albumImgs"
+            :is-compress="ruleForm.isCompress"
+          />
         </el-form-item>
         <el-form-item id="submitBtn">
           <el-button type="primary" @click="submitForm(ruleFormRef)"> 创建</el-button>
@@ -180,9 +184,10 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     }
   })
 
-  let imgObjs: dto_AlbumImgAddDTO[] = ruleForm.albumImgs.map(img => {
+  let imgObjs: dto_AlbumImgAddDTO[] = ruleForm.albumImgs.map((img) => {
     return {
       url: img,
+      is_raw: !ruleForm.isCompress
     }
   })
   // 新建相册
@@ -191,12 +196,12 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     cover_img: ruleForm.coverImgUrl,
     description: ruleForm.description,
     name: ruleForm.name,
-    user_id: userStore.loginUser.userId,
+    user_id: userStore.loginUser.userId
   })
   if (res.code == 0) {
     console.log('新建相册成功:', res)
     const data = res.data
-    albumStore.updateShowAddDialog(false);
+    albumStore.updateShowAddDialog(false)
   } else {
     ElMessage.error('登录失败:' + res.msg)
   }
