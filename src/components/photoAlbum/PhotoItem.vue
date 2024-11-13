@@ -6,7 +6,7 @@ const albumStore = useAlbumStore()
 
 const props = defineProps({
   modelValue: Boolean,
-  isCompress: Boolean,
+  isCompress: Boolean
 })
 
 let $emit = defineEmits(['update:modelValue', 'onUpdate'])
@@ -278,7 +278,6 @@ const uploadFile = (option: any) => {
 }
 
 const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
-  // console.log('上传成功：', response, uploadFile, uploadFiles)
   uploadFile.url = response
 
   // 如果是新的上传批次，重置计数器
@@ -291,13 +290,15 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     // 调用后端接口保存图片地址
     const res = await Service.postAlbumImg({
       album_id: albumStore.currentAlbumId,
-      urls: [response]
+      urls: [response],
+      is_raw: !props.isCompress // 如果开启压缩，则不是原图
     })
     if (res.code === 0) {
       // 将图片地址添加到图片列表前面
       imgList.value.unshift({
         id: res.data[response].id,
-        url: response
+        url: response,
+        is_raw: !props.isCompress // 同时在前端数据中也记录是否为原图
       })
       // 只在所有图片都上传完成时显示成功消息
       if (uploadingCount.value === totalUploadCount.value) {
