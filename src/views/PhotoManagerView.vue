@@ -3,9 +3,10 @@ import { Search } from '@element-plus/icons-vue'
 import PhotoAlbumItem from '@/components/photoAlbum/PhotoAlbumItem.vue'
 import SvgIcon from '@/icons/SvgIcon'
 import { useAlbumStore } from '@/stores/album'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Service, type vo_AlbumVO } from '../../generated'
+import PhotoStatsDialog from '@/components/photoAlbum/PhotoStatsDialog.vue'
 
 const albumStore = useAlbumStore()
 
@@ -24,6 +25,10 @@ const total = ref(0)
 
 // 搜索关键词
 const searchKeyword = ref('')
+
+// 统计弹窗相关
+const statsDialogVisible = ref(false)
+const statsDialogRef = ref()
 
 // 获取相册列表
 const getAlbumList = async () => {
@@ -83,6 +88,12 @@ watch(
   }
 )
 
+const showStats = async () => {
+  statsDialogVisible.value = true
+  await nextTick()
+  statsDialogRef.value?.getStats()
+}
+
 onMounted(() => {
   getAlbumList()
 })
@@ -108,6 +119,9 @@ onMounted(() => {
             />
             <div class="create-btn" @click="handleCreate">
               <SvgIcon icon="create" size="40px" />
+            </div>
+            <div class="stats-btn" @click="showStats">
+              <SvgIcon icon="stats" size="35px" />
             </div>
           </div>
           <div class="photo-manager-content-search-right">
@@ -141,6 +155,7 @@ onMounted(() => {
         </div>
       </el-card>
     </div>
+    <PhotoStatsDialog v-model="statsDialogVisible" ref="statsDialogRef" />
   </div>
 </template>
 
@@ -184,6 +199,20 @@ onMounted(() => {
 
             &:hover {
               transform: rotate(90deg) scale(1.1);
+              filter: drop-shadow(0 0 5px rgba(64, 158, 255, 0.5));
+            }
+
+            &:active {
+              transform: scale(0.95);
+            }
+          }
+
+          .stats-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: rotate(360deg) scale(1.1);
               filter: drop-shadow(0 0 5px rgba(64, 158, 255, 0.5));
             }
 
