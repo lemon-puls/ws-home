@@ -24,6 +24,7 @@ interface AlbumImage {
   id: number
   url: string
   is_raw: boolean
+  size?: number
 }
 const imgList = ref<AlbumImage[]>([])
 const loading = ref(false)
@@ -33,6 +34,9 @@ const pageSize = 20
 
 const uploadingCount = ref(0)
 const totalUploadCount = ref(0)
+
+// 用于存储压缩后文件大小的 Map
+const compressedFileSizes = new Map<string, number>()
 
 // 添加一个压缩队列类
 class CompressionQueue {
@@ -220,6 +224,9 @@ const ajaxUpload: UploadRequestHandler = (option) => {
       .then((compressedFile: File) => {
         console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
 
+        // 存储压缩后的文件大小
+        compressedFileSizes.set(option.file.uid, compressedFile.size)
+
         // 创建一个新对象，包含压缩后的文件和原始文件的 uid
         const uploadFileObj = new File([compressedFile], compressedFile.name, {
           type: compressedFile.type
@@ -287,18 +294,31 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   uploadingCount.value++
 
   try {
+    // 获取文件大小(如果有压缩则使用压缩后的大小)
+    const fileSize = compressedFileSizes.get(uploadFile.uid) || uploadFile.size
+    const sizeInMB = Number((fileSize / (1024 * 1024)).toFixed(2))
+
+    // 清理已使用的压缩信息
+    compressedFileSizes.delete(uploadFile.uid)
+
     // 调用后端接口保存图片地址
     const res = await Service.postAlbumImg({
       album_id: albumStore.currentAlbumId,
-      urls: [response],
-      is_raw: !props.isCompress // 如果开启压缩，则不是原图
+      album_imgs: [
+        {
+          url: response,
+          is_raw: !props.isCompress,
+          size: sizeInMB // 存储转换后的 MB 大小
+        }
+      ]
     })
     if (res.code === 0) {
       // 将图片地址添加到图片列表前面
       imgList.value.unshift({
         id: res.data[response].id,
         url: response,
-        is_raw: !props.isCompress // 同时在前端数据中也记录是否为原图
+        is_raw: !props.isCompress,
+        size: sizeInMB // 存储转换后的 MB 大小
       })
       // 只在所有图片都上传完成时显示成功消息
       if (uploadingCount.value === totalUploadCount.value) {
