@@ -17,6 +17,9 @@ const formatDate = (dateString: string) => {
 // 简化的日期格式化函数（只显示年月日）
 const formatDateSimple = (dateStr: string) => {
   if (!dateStr) return ''
+  if (dateStr === "0001-01-01T00:00:00Z") {
+    return ""
+  }
   const date = new Date(dateStr)
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
