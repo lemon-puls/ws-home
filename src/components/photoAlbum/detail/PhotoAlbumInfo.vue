@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { defineProps, ref, watch, nextTick } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
-import { formatDate } from '../../../utils/TimeUtils'
+import { formatDate, formatDateSimple } from '../../../utils/TimeUtils'
 import { Service } from '../../../../generated'
 import { ElMessage } from 'element-plus'
 import { useAlbumStore } from '@/stores/album'
+import { formatSize } from '../../../utils/ByteUtils'
 
 const albumStore = useAlbumStore()
 
@@ -19,6 +20,8 @@ interface AlbumInfo {
   createTime: string
   author: Author
   photoCount: number
+  totalSize: number
+  startTime: string
 }
 
 const props = defineProps<{
@@ -136,7 +139,14 @@ const handleDescClick = async () => {
         <span
           ><span class="photo-count">{{ albumInfo.photoCount }}</span> 张照片</span
         >
-        <span class="create-time">{{ formatDate(albumInfo.createTime) }}</span>
+        <span class="total-size">{{ albumInfo.totalSize }} MB</span>
+      </div>
+
+      <div class="album-info-stats">
+        <span class="album-time-range" v-show="formatDateSimple(albumInfo.startTime)"
+          >日期：{{ formatDateSimple(albumInfo.startTime) }}</span
+        >
+        <span class="create-time">创建：{{ formatDate(albumInfo.createTime) }}</span>
       </div>
 
       <div class="album-info-desc" @click="handleDescClick">
@@ -224,10 +234,21 @@ const handleDescClick = async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 8px;
 
     .photo-count {
       color: #ff4757;
       font-weight: 600;
+    }
+
+    .total-size {
+      color: #c4d52e;
+      font-weight: 500;
+    }
+
+    .album-time-range {
+      color: #1e90ff;
+      font-size: 12px;
     }
 
     .create-time {

@@ -173,6 +173,8 @@ const albumInfo = ref({
     avatar: '',
     username: ''
   },
+  startTime: '',
+  totalSize: 0,
   photoCount: 0
 })
 
@@ -182,6 +184,7 @@ const getAlbumDetail = async (albumId: number) => {
     const res = await Service.getAlbum(albumId.toString())
     if (res.code === 0) {
       const data = res.data
+      console.log('相册详情数据:', data)
       // 更新相册信息
       albumInfo.value = {
         title: data.name,
@@ -191,7 +194,9 @@ const getAlbumDetail = async (albumId: number) => {
           avatar: data.user?.avatar || '', // 这里可以设置默认头像
           username: data.user?.userName || '未知用户'
         },
-        photoCount: data.photo_count || data.album_imgs?.length || 0
+        photoCount: data.photo_count || data.album_imgs?.length || 0,
+        totalSize: data.total_size || 0,
+        startTime: data.start_time || ''
       }
     }
   } catch (error) {
