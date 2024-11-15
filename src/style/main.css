@@ -25,32 +25,36 @@
 /*    width: 20px;*/
 /*}*/
 
-@import "base.scss";
+@import 'base.scss';
 
 /* width */
 ::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background-color: #d0d0d0;
-    border-radius: 10px;
+  background-color: #d0d0d0;
+  border-radius: 10px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #979797;
+  background: #979797;
 }
 
 /**
   信息提示框给予较高的z-index，避免被遮挡
  */
 .el-message {
-    z-index: 20000 !important;
+  z-index: 20000 !important;
+}
+
+.el-picker__popper {
+  z-index: 20001 !important;
 }
