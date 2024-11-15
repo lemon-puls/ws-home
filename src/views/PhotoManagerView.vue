@@ -37,7 +37,7 @@ const getAlbumList = async () => {
       currentPage.value,
       pageSize.value,
       undefined,
-      'create_time',
+      'start_time',
       'desc',
       searchKeyword.value
     )
