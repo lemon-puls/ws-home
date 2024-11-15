@@ -36,7 +36,7 @@ const uploadingCount = ref(0)
 const totalUploadCount = ref(0)
 
 // 用于存储压缩后文件大小的 Map
-const compressedFileSizes = new Map<string, number>()
+const compressedFileSizes = new Map<number, number>()
 
 // 添加一个压缩队列类
 class CompressionQueue {
@@ -295,7 +295,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
 
   try {
     // 获取文件大小(如果有压缩则使用压缩后的大小)
-    const fileSize = compressedFileSizes.get(uploadFile.uid) || uploadFile.size
+    const fileSize = compressedFileSizes.get(uploadFile.uid) || uploadFile.size || 0
     const sizeInMB = Number((fileSize / (1024 * 1024)).toFixed(2))
 
     // 清理已使用的压缩信息

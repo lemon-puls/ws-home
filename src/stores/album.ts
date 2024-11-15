@@ -5,7 +5,15 @@ export const useAlbumStore = defineStore('album', () => {
   const isShowAddDialog = ref(false)
   const isShowAlbumDetail = ref(false)
   const currentAlbumId = ref(0)
-  const editAlbumData = ref(null)
+  const editAlbumData = ref<{
+    id: number,
+    name: string,
+    description: string,
+    // albumImgs: [],
+    // isCompress: true,
+    coverImgUrl: string,
+    startTime: string
+  } | null>(null)
 
   const updateShowAddDialog = (show: boolean) => {
     isShowAddDialog.value = show
