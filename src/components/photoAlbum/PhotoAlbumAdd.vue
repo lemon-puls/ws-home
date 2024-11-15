@@ -57,8 +57,7 @@
             v-model="ruleForm.startTime"
             align="right"
             type="date"
-            placeholder="选择日期"
-            :picker-options="pickerOptions">
+            placeholder="选择日期">
           </el-date-picker>
         </el-form-item>
         <el-form-item id="submitBtn">
@@ -125,6 +124,8 @@ const albumStore = useAlbumStore()
 const userStore = useUserStore()
 const ruleFormRef = ref<FormInstance>()
 
+const isEdit = ref(false)
+
 const ruleForm = reactive({
   name: '',
   description: '',
@@ -140,10 +141,11 @@ watch(
   (newData) => {
     if (newData) {
       // 填充编辑表单
-      ruleForm.name = newData.name
-      ruleForm.description = newData.description
-      ruleForm.coverImgUrl = newData.coverImgUrl
-      ruleForm.startTime = newData.startTime
+      isEdit.value = newData?.id ? true : false
+      ruleForm.name = newData?.name
+      ruleForm.description = newData?.description
+      ruleForm.coverImgUrl = newData?.coverImgUrl
+      ruleForm.startTime = newData?.startTime
       // ruleForm.albumImgs = newData.albumImgs
     }
   },
@@ -211,30 +213,4 @@ const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.resetFields()
 }
-
-let pickerOptions = {
-  disabledDate(time) {
-    return time.getTime() > Date.now();
-  },
-  shortcuts: [{
-    text: '今天',
-    onClick(picker) {
-      picker.$emit('pick', new Date());
-    }
-  }, {
-    text: '昨天',
-    onClick(picker) {
-      const date = new Date();
-      date.setTime(date.getTime() - 3600 * 1000 * 24);
-      picker.$emit('pick', date);
-    }
-  }, {
-    text: '一周前',
-    onClick(picker) {
-      const date = new Date();
-      date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
-      picker.$emit('pick', date);
-    }
-  }]
-};
 </script>
