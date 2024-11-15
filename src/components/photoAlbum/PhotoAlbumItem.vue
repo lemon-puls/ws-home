@@ -26,6 +26,10 @@
     </template>
 
     <div class="context-menu-content">
+      <div class="menu-item edit" @click="handleEdit">
+        <el-icon><Edit /></el-icon>
+        <span>编辑相册</span>
+      </div>
       <div class="menu-item delete" @click="handleDelete">
         <el-icon><Delete /></el-icon>
         <span>删除相册</span>
@@ -38,9 +42,10 @@
 import { defineProps, ref } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
 import type { vo_AlbumVO } from '../../../generated'
-import { Delete } from '@element-plus/icons-vue'
+import { Delete, Edit } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Service } from '../../../generated'
+import { useAlbumStore } from '@/stores/album'
 
 const emit = defineEmits(['update', 'click'])
 
@@ -50,6 +55,8 @@ const props = defineProps<{
 
 // 右键菜单相关
 const showDropdown = ref(false)
+
+const albumStore = useAlbumStore()
 
 const handleDelete = async () => {
   try {
@@ -77,6 +84,23 @@ const handleDelete = async () => {
   } finally {
     showDropdown.value = false
   }
+}
+
+const handleEdit = () => {
+  // 准备编辑数据
+  const editData = {
+    id: props.album.id,
+    name: props.album.name,
+    description: props.album.description,
+    coverImgUrl: props.album.cover_img,
+    // albumImgs: props.album.album_imgs?.map((img) => img.url) || []
+    startTime: props.album.start_time,
+  }
+
+  // 通过 store 传递编辑数据并打开编辑弹窗
+  albumStore.updateEditAlbumData(editData)
+  albumStore.updateShowAddDialog(true)
+  showDropdown.value = false
 }
 
 const formatDate = (dateStr: string) => {
@@ -114,6 +138,14 @@ const formatDate = (dateStr: string) => {
 
       &:hover {
         background-color: #fff1f0;
+      }
+    }
+
+    &.edit {
+      color: #409eff;
+
+      &:hover {
+        background-color: #ecf5ff;
       }
     }
   }
