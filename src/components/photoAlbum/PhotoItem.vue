@@ -18,6 +18,7 @@ import { ElMessage } from 'element-plus'
 import { Service } from '../../../generated'
 import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 import { compressImage } from '@/utils/FileUtils'
+import type { UploadInstance } from 'element-plus'
 
 const selectedImages = ref<number[]>([])
 interface AlbumImage {
@@ -324,6 +325,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       if (uploadingCount.value === totalUploadCount.value) {
         ElMessage.success(`${totalUploadCount.value}张图片添加成功`)
         uploadingCount.value = 0 // 重置计数器
+        clearUploadFiles() // 清空上传列表
         $emit('onUpdate') // 触发更新事件
       }
     } else {
@@ -343,12 +345,20 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
 const handleExceed = (files: File[]) => {
   ElMessage.warning('一次最多只能上传 50 张图片')
 }
+
+const uploadRef = ref<UploadInstance>()
+
+// 清空文件列表
+const clearUploadFiles = () => {
+  uploadRef.value?.clearFiles()
+}
 </script>
 
 <template>
   <div id="photoItemId" style="overflow: scroll; height: 100%" @scroll="handleScroll">
     <!--    <button v-if="isEditing" @click="deleteSelectedImages">删除选中图片</button>-->
     <el-upload
+      ref="uploadRef"
       class="upload-demo"
       :http-request="ajaxUpload"
       :on-success="handleSuccess"
