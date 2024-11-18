@@ -20,6 +20,7 @@ import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 import { compressImage } from '@/utils/FileUtils'
 import type { UploadInstance } from 'element-plus'
 import VideoPreviewer from '@/components/preview/VideoPreviewer.vue'
+import { compressVideo } from '@/utils/FileUtils'
 
 const selectedImages = ref<number[]>([])
 interface AlbumImage {
@@ -85,6 +86,52 @@ class CompressionQueue {
 
 // 创建压缩队列实例
 const compressionQueue = new CompressionQueue()
+
+// 添加一个视频压缩队列类
+class VideoCompressionQueue {
+  private queue: Array<{
+    file: File
+    resolve: (file: File) => void
+    reject: (error: any) => void
+  }> = []
+  private processing = 0
+  private readonly maxConcurrent = 2 // 视频压缩比较耗资源，限制并发数
+
+  async add(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ file, resolve, reject })
+      this.processNext()
+    })
+  }
+
+  private async processNext() {
+    if (this.processing >= this.maxConcurrent || this.queue.length === 0) {
+      return
+    }
+
+    this.processing++
+    console.log(
+      '视频压缩队列中还有',
+      this.queue.length,
+      '个文件等待压缩, 正在处理中：',
+      this.processing
+    )
+    const { file, resolve, reject } = this.queue.shift()!
+
+    try {
+      const compressedFile = await compressVideo(file)
+      resolve(compressedFile)
+    } catch (error) {
+      reject(error)
+    } finally {
+      this.processing--
+      this.processNext()
+    }
+  }
+}
+
+// 创建视频压缩队列实例
+const videoCompressionQueue = new VideoCompressionQueue()
 
 // 添加筛选类型
 const filterType = ref('compressed')
@@ -222,31 +269,48 @@ const ajaxUpload: UploadRequestHandler = (option) => {
   const file = option.file
   const isVideo = file.type.startsWith('video/')
 
-  if (!isVideo && props.isCompress) {
-    // 只对图片进行压缩
-    compressionQueue
-      .add(file)
-      .then((compressedFile: File) => {
-        console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
-
-        // 存储压缩后的文件大小
-        compressedFileSizes.set(option.file.uid, compressedFile.size)
-
-        // 创建一个新对象，包含压缩后的文件和原始文件的 uid
-        const uploadFileObj = new File([compressedFile], compressedFile.name, {
-          type: compressedFile.type
-        }) as any
-        uploadFileObj.uid = option.file.uid
-        option.file = uploadFileObj
-        uploadFile(option)
-      })
-      .catch((error) => {
-        console.error('图片压缩失败:', error)
-        // 压缩失败时使用原始文件上传
-        // uploadFile(option)
-      })
+  if (props.isCompress) {
+    if (isVideo) {
+      // 视频压缩
+      videoCompressionQueue
+        .add(file)
+        .then((compressedFile: File) => {
+          console.log('视频压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
+          compressedFileSizes.set(option.file.uid, compressedFile.size)
+          const uploadFileObj = new File([compressedFile], compressedFile.name, {
+            type: compressedFile.type
+          }) as any
+          uploadFileObj.uid = option.file.uid
+          option.file = uploadFileObj
+          uploadFile(option)
+        })
+        .catch((error) => {
+          console.error('视频压缩失败:', error)
+          ElMessage.warning('视频压缩失败，将使用原始文件上传')
+          uploadFile(option)
+        })
+    } else {
+      // 图片压缩
+      compressionQueue
+        .add(file)
+        .then((compressedFile: File) => {
+          console.log('图片压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
+          compressedFileSizes.set(option.file.uid, compressedFile.size)
+          const uploadFileObj = new File([compressedFile], compressedFile.name, {
+            type: compressedFile.type
+          }) as any
+          uploadFileObj.uid = option.file.uid
+          option.file = uploadFileObj
+          uploadFile(option)
+        })
+        .catch((error) => {
+          console.error('图片压缩失败:', error)
+          ElMessage.warning('图片压缩失败，将使用原始文件上传')
+          uploadFile(option)
+        })
+    }
   } else {
-    // 视频或不需要压缩的图片直接上传
+    // 不需要压缩，直接上传
     uploadFile(option)
   }
   return new Promise(() => {})
