@@ -19,6 +19,7 @@ import { Service } from '../../../generated'
 import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 import { compressImage } from '@/utils/FileUtils'
 import type { UploadInstance } from 'element-plus'
+import VideoPreviewer from '@/components/preview/VideoPreviewer.vue'
 
 const selectedImages = ref<number[]>([])
 interface AlbumImage {
@@ -218,10 +219,13 @@ defineExpose({
 const ajaxUpload: UploadRequestHandler = (option) => {
   const sizeInMB = option.file.size / (1024 * 1024)
   console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
+  const file = option.file
+  const isVideo = file.type.startsWith('video/')
 
-  if (props.isCompress) {
+  if (!isVideo && props.isCompress) {
+    // 只对图片进行压缩
     compressionQueue
-      .add(option.file)
+      .add(file)
       .then((compressedFile: File) => {
         console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
 
@@ -242,6 +246,7 @@ const ajaxUpload: UploadRequestHandler = (option) => {
         // uploadFile(option)
       })
   } else {
+    // 视频或不需要压缩的图片直接上传
     uploadFile(option)
   }
   return new Promise(() => {})
@@ -352,6 +357,12 @@ const uploadRef = ref<UploadInstance>()
 const clearUploadFiles = () => {
   uploadRef.value?.clearFiles()
 }
+
+// 添加判断文件类型的函数
+const isVideo = (url: string) => {
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov']
+  return videoExtensions.some((ext) => url.toLowerCase().endsWith(ext))
+}
 </script>
 
 <template>
@@ -366,27 +377,45 @@ const clearUploadFiles = () => {
       :show-file-list="false"
       :limit="50"
       :on-exceed="handleExceed"
+      :accept="'.jpg,.jpeg,.png,.gif,.mp4,.webm,.ogg,.mov'"
     >
       <div class="photo-upload-btn" v-if="props.modelValue">
         <Plus class="photo-upload-btn-icon" />
         <span class="upload-tip">最多 50 张</span>
       </div>
     </el-upload>
-    <ImgPreviewer
-      v-for="(img, index) in imgList"
-      :key="img.id"
-      :src="img.url"
-      :preview-src-list="imgList.map((item) => item.url)"
-      :initial-index="index"
-      :is-editing="props.modelValue"
-      :class="{ selected: selectedImages.includes(img.id) }"
-      :style="{
-        width: 'clamp(150px, 12vw, 220px)',
-        height: 'auto',
-        margin: '10px'
-      }"
-      @select="toggleSelection(img.id)"
-    />
+
+    <template v-for="(img, index) in imgList" :key="img.id">
+      <!-- 图片预览组件 -->
+      <ImgPreviewer
+        v-if="!isVideo(img.url)"
+        :src="img.url"
+        :preview-src-list="imgList.filter((item) => !isVideo(item.url)).map((item) => item.url)"
+        :initial-index="index"
+        :is-editing="props.modelValue"
+        :class="{ selected: selectedImages.includes(img.id) }"
+        :style="{
+          width: 'clamp(150px, 12vw, 220px)',
+          height: 'auto',
+          margin: '10px'
+        }"
+        @select="toggleSelection(img.id)"
+      />
+
+      <!-- 视频预览组件 -->
+      <VideoPreviewer
+        v-else
+        :src="img.url"
+        :is-editing="props.modelValue"
+        :class="{ selected: selectedImages.includes(img.id) }"
+        :style="{
+          width: 'clamp(150px, 12vw, 220px)',
+          height: 'auto',
+          margin: '10px'
+        }"
+        @select="toggleSelection(img.id)"
+      />
+    </template>
   </div>
 </template>
 
