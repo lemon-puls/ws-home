@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   // 视频URL
@@ -15,6 +15,14 @@ const props = defineProps<{
 const dialogVisible = ref(false)
 const currentIndex = ref(props.initialIndex || 0)
 const videoRef = ref<HTMLVideoElement>()
+
+// 监听对话框关闭
+watch(dialogVisible, (newVal) => {
+  if (!newVal && videoRef.value) {
+    // 对话框关闭时暂停视频
+    videoRef.value.pause()
+  }
+})
 
 // 打开预览
 const showPreview = () => {
@@ -41,6 +49,9 @@ const handleClick = () => {
 // 切换到上一个视频
 const prevVideo = () => {
   if (!props.previewSrcList?.length) return
+  if (videoRef.value) {
+    videoRef.value.pause() // 暂停当前视频
+  }
   currentIndex.value =
     (currentIndex.value - 1 + props.previewSrcList.length) % props.previewSrcList.length
   playVideo()
@@ -49,6 +60,9 @@ const prevVideo = () => {
 // 切换到下一个视频
 const nextVideo = () => {
   if (!props.previewSrcList?.length) return
+  if (videoRef.value) {
+    videoRef.value.pause() // 暂停当前视频
+  }
   currentIndex.value = (currentIndex.value + 1) % props.previewSrcList.length
   playVideo()
 }
