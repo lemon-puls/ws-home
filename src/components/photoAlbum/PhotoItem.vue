@@ -406,6 +406,10 @@ const isVideo = (url: string) => {
       <VideoPreviewer
         v-else
         :src="img.url"
+        :preview-src-list="imgList.filter((item) => isVideo(item.url)).map((item) => item.url)"
+        :initial-index="
+          imgList.filter((item) => isVideo(item.url)).findIndex((item) => item.url === img.url)
+        "
         :is-editing="props.modelValue"
         :class="{ selected: selectedImages.includes(img.id) }"
         :style="{
