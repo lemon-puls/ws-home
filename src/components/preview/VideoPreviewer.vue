@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { VideoPlay, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   // 视频URL
