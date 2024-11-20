@@ -1,3 +1,6 @@
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
+
 // 压缩图片并返回压缩后的 File 对象
 export const compressImage = (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
@@ -101,97 +104,150 @@ export const getFileByImgUrl = async (imgUrl: string, fileName?: string) => {
 //   });
 
 // 压缩视频并返回压缩后的 File 对象
-export const compressVideo = (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    // 创建一个 video 元素来获取视频信息
-    const video = document.createElement('video')
-    video.preload = 'metadata'
-    video.muted = true // 静音
-    video.style.display = 'none' // 隐藏视频元素
-    document.body.appendChild(video) // 临时添加到 DOM 中
-    video.src = URL.createObjectURL(file)
+export const compressVideo = async (
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<File> => {
+  try {
+    // const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm'
+    // // const baseURL = ''
+    // const ffmpeg = new FFmpeg()
+    //
+    // // 添加日志监听
+    // ffmpeg.on('log', ({ message }) => {
+    //   // 解析 FFmpeg 输出的进度信息
+    //   const progressMatch = message.match(/time=(\d+:\d+:\d+.\d+)/)
+    //   if (progressMatch) {
+    //     const timeStr = progressMatch[1]
+    //     const [hours, minutes, seconds] = timeStr.split(':').map(Number)
+    //     const currentTime = hours * 3600 + minutes * 60 + seconds
+    //
+    //     // 获取视频总时长
+    //     const durationMatch = message.match(/Duration: (\d+:\d+:\d+.\d+)/)
+    //     if (durationMatch) {
+    //       const [dHours, dMinutes, dSeconds] = durationMatch[1].split(':').map(Number)
+    //       const totalDuration = dHours * 3600 + dMinutes * 60 + dSeconds
+    //
+    //       // 计算进度百分比
+    //       const progress = Math.round((currentTime / totalDuration) * 100)
+    //       onProgress?.(progress)
+    //     }
+    //   }
+    // })
+    //
+    // console.log('开始加载 FFmpeg...')
+    // await ffmpeg.load({
+    //   coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    //   wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    //   workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
+    // })
+    // console.log('FFmpeg 加载完成')
+    //
+    // console.log('开始写入输入文件...')
+    // const inputFileName = 'input' + file.name.substring(file.name.lastIndexOf('.'))
+    // await ffmpeg.writeFile(inputFileName, await fetchFile(file))
+    // console.log('输入文件写入完成')
+    //
+    // console.log('开始执行压缩命令...')
+    // const outputFileName = 'output.mp4'
+    // await ffmpeg.exec([
+    //   '-i',
+    //   inputFileName,
+    //   '-vf',
+    //   'scale=640:-1', // 调整分辨率
+    //   '-b:v',
+    //   '1000k', // 比特率
+    //   outputFileName
+    //
+    //   // '-i',
+    //   // inputFileName,
+    //   // '-c:v',
+    //   // 'libx264',
+    //   // '-preset',
+    //   // 'ultrafast',
+    //   // '-crf',
+    //   // '28',
+    //   // '-c:a',
+    //   // 'aac',
+    //   // '-b:a',
+    //   // '128k',
+    //   // '-movflags',
+    //   // '+faststart',
+    //   // outputFileName
+    // ])
+    //
+    // // await ffmpeg.run(
+    // //   '-i', inputFileName,
+    // //   '-vf', 'scale=640:-1', // 调整分辨率
+    // //   '-b:v', '1000k', // 比特率
+    // //   outputFileName
+    // // );
+    //
+    // console.log('压缩命令执行完成')
+    //
+    // console.log('视频压缩完成, 开始读取输出文件...')
+    // // 读取输出文件
+    // const data = await ffmpeg.readFile(outputFileName)
+    // console.log('输出文件读取完成')
+    // const compressedBlob = new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' })
+    // const compressedFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, '.mp4'), {
+    //   type: 'video/mp4'
+    // })
+    // console.log('压缩后的文件:', compressedFile)
+    //
+    // // 如果压缩后文件更大,则返回原文件
+    // if (compressedFile.size >= file.size) {
+    //   console.log('压缩后的文件更大, 开始返回原文件...')
+    //   return file
+    // }
+    // console.log('压缩后的文件更小, 开始返回压缩后的文件...')
 
-    video.onloadedmetadata = () => {
-      // 创建 canvas
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+    // const baseURL = 'http://localhost:5173'
+    const ffmpeg = new FFmpeg()
+    ffmpeg.on('log', ({ message }) => {
+      console.log(message)
+    })
+    // toBlobURL is used to bypass CORS issue, urls with the same
+    // domain can be used directly.
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+      // workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
+    })
 
-      // 降低分辨率
-      const maxWidth = 854 // 480p
-      const maxHeight = 480
-      let width = video.videoWidth
-      let height = video.videoHeight
-
-      const ratio = Math.min(maxWidth / width, maxHeight / height)
-      width = Math.floor(width * ratio)
-      height = Math.floor(height * ratio)
-
-      canvas.width = width
-      canvas.height = height
-
-      const stream = canvas.captureStream(24) // 限制帧率为 24fps
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'video/webm;codecs=vp8', // 使用 VP8 编码器
-        videoBitsPerSecond: 1000000 // 降低比特率到 1Mbps
-      })
-
-      const chunks: Blob[] = []
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunks.push(e.data)
-        }
-      }
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' })
-        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webm'), {
-          type: 'video/webm'
-        })
-
-        // 清理资源
-        URL.revokeObjectURL(video.src)
-        document.body.removeChild(video)
-
-        // 检查压缩是否有效
-        if (compressedFile.size >= file.size) {
-          // 如果压缩后反而更大，返回原文件
-          resolve(file)
-        } else {
-          resolve(compressedFile)
-        }
-      }
-
-      mediaRecorder.start(1000) // 每秒收集一次数据
-
-      const processFrame = () => {
-        if (video.ended || video.paused) {
-          mediaRecorder.stop()
-          return
-        }
-        ctx?.drawImage(video, 0, 0, width, height)
-        requestAnimationFrame(processFrame)
-      }
-
-      video
-        .play()
-        .then(() => {
-          processFrame()
-        })
-        .catch((error) => {
-          // 清理资源
-          URL.revokeObjectURL(video.src)
-          document.body.removeChild(video)
-          reject(new Error('视频处理失败: ' + error.message))
-        })
-    }
-
-    video.onerror = () => {
-      // 清理资源
-      URL.revokeObjectURL(video.src)
-      if (document.body.contains(video)) {
-        document.body.removeChild(video)
-      }
-      reject(new Error('视频加载失败'))
-    }
-  })
+    const inputFileName = 'input' + file.name.substring(file.name.lastIndexOf('.'))
+    await ffmpeg.writeFile(inputFileName, await fetchFile(file))
+    // await ffmpeg.writeFile('input.webm', await fetchFile('https://raw.githubusercontent.com/ffmpegwasm/testdata/master/Big_Buck_Bunny_180_10s.webm'));
+    await ffmpeg.exec([
+      '-i',
+      inputFileName,
+      // 降低分辨率到720p
+      '-vf', 'scale=-2:720',
+      '-r', '30',
+      '-c:v',
+      'libx264',
+      // 使用超快速编码预设
+      '-preset', 'ultrafast',
+      '-crf',
+      '28',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '128k',
+      // 快速启动
+      '-movflags', '+faststart',
+      'output.mp4'
+    ])
+    const data = await ffmpeg.readFile('output.mp4')
+    const compressedBlob = new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' })
+    const compressedFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, '.mp4'), {
+      type: 'video/mp4'
+    })
+    console.log('压缩后的文件:', compressedFile)
+    return compressedFile
+  } catch (error) {
+    console.error('视频压缩失败，详细错误:', error)
+    throw error
+  }
 }

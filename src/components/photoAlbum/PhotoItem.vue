@@ -119,7 +119,17 @@ class VideoCompressionQueue {
     const { file, resolve, reject } = this.queue.shift()!
 
     try {
-      const compressedFile = await compressVideo(file)
+      const compressedFile = await compressVideo(file, (progress) => {
+        console.log(`视频压缩进度: ${progress}%`)
+        // 这里可以通过 ElMessage 或其他方式展示进度
+        ElMessage({
+          type: 'info',
+          message: `视频压缩进度: ${progress}%`,
+          duration: 1000,
+          offset: 50
+        })
+      })
+      console.log('视频压缩后1：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
       resolve(compressedFile)
     } catch (error) {
       reject(error)
