@@ -391,7 +391,9 @@ const isVideo = (url: string) => {
         v-if="!isVideo(img.url)"
         :src="img.url"
         :preview-src-list="imgList.filter((item) => !isVideo(item.url)).map((item) => item.url)"
-        :initial-index="index"
+        :initial-index="
+          imgList.filter((item, idx) => !isVideo(item.url) && idx <= index).length - 1
+        "
         :is-editing="props.modelValue"
         :class="{ selected: selectedImages.includes(img.id) }"
         :style="{
