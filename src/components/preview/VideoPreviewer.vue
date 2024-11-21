@@ -90,7 +90,13 @@ const emit = defineEmits(['select'])
     </div>
 
     <!-- 预览弹窗 -->
-    <el-dialog v-model="dialogVisible" width="80%" :close-on-click-modal="true" :show-close="true">
+    <el-dialog
+      v-model="dialogVisible"
+      width="80%"
+      :close-on-click-modal="true"
+      :show-close="true"
+      class="video-preview-dialog"
+    >
       <div class="video-container">
         <!-- 左切换按钮 -->
         <div v-if="props.previewSrcList?.length > 1" class="switch-btn prev" @click="prevVideo">
@@ -101,7 +107,7 @@ const emit = defineEmits(['select'])
           ref="videoRef"
           controls
           :src="props.previewSrcList?.[currentIndex] || props.src"
-          style="width: 100%"
+          class="preview-dialog-video"
         >
           您的浏览器不支持 video 标签。
         </video>
@@ -160,8 +166,18 @@ const emit = defineEmits(['select'])
 .video-container {
   position: relative;
   width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+.preview-dialog-video {
+  width: 100%;
+  height: auto;
+  max-height: 85vh;
+  object-fit: contain;
 }
 
 .switch-btn {
@@ -195,5 +211,13 @@ const emit = defineEmits(['select'])
 
 .next {
   right: 10px;
+}
+
+:deep(.el-dialog) {
+  margin-top: 5vh !important;
+  margin-bottom: 5vh !important;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 </style>
