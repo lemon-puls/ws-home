@@ -202,18 +202,20 @@ export const compressVideo = async (
     // }
     // console.log('压缩后的文件更小, 开始返回压缩后的文件...')
 
+    console.log('开始压缩视频...')
+    const startTime = Date.now()
+
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
     // const baseURL = 'http://localhost:5173'
     const ffmpeg = new FFmpeg()
     ffmpeg.on('log', ({ message }) => {
       console.log(message)
     })
-    // toBlobURL is used to bypass CORS issue, urls with the same
-    // domain can be used directly.
+
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
-      // workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+      workerURL: await toBlobURL(`/ffmpeg-core.worker.js`, 'text/javascript')
     })
 
     const inputFileName = 'input' + file.name.substring(file.name.lastIndexOf('.'))
@@ -222,29 +224,65 @@ export const compressVideo = async (
     await ffmpeg.exec([
       '-i',
       inputFileName,
-      // 降低分辨率到720p
-      '-vf', 'scale=-2:720',
-      '-r', '30',
+      // 使用硬件加速编码器(优先使用 h264_videotoolbox(Mac), h264_qsv(Intel), h264_nvenc(NVIDIA), h264_amf(AMD))
       '-c:v',
       'libx264',
-      // 使用超快速编码预设
-      '-preset', 'ultrafast',
+      // 使用最快的编码预设
+      '-preset',
+      'ultrafast',
+      // 降低编码质量以提高速度
       '-crf',
-      '28',
+      '30',
+      // 减少参考帧数量
+      '-refs',
+      '2',
+      // 使用较快的运动估计算法
+      '-me_method',
+      'dia',
+      // 减少b帧数量
+      '-bf',
+      '2',
+      // 使用较快的子像素运动估计精度
+      '-subq',
+      '1',
+      // 禁用复杂的编码功能
+      '-flags',
+      '-loop',
+      // 使用较快的去块滤波器
+      '-deblock',
+      '0:0',
+      // 降低分辨率到720p
+      '-vf',
+      'scale=-2:720',
+      // 限制帧率
+      '-r',
+      '30',
+      // 音频编码
       '-c:a',
       'aac',
       '-b:a',
       '128k',
       // 快速启动
-      '-movflags', '+faststart',
+      '-movflags',
+      '+faststart',
       'output.mp4'
     ])
+
     const data = await ffmpeg.readFile('output.mp4')
     const compressedBlob = new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' })
     const compressedFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, '.mp4'), {
       type: 'video/mp4'
     })
-    console.log('压缩后的文件:', compressedFile)
+
+    const endTime = Date.now()
+    const duration = (endTime - startTime) / 1000 // 转换为秒
+
+    console.log('视频压缩完成!')
+    console.log(`压缩耗时: ${duration.toFixed(2)}秒`)
+    console.log(`原始大小: ${(file.size / (1024 * 1024)).toFixed(2)} MB`)
+    console.log(`压缩后大小: ${(compressedFile.size / (1024 * 1024)).toFixed(2)} MB`)
+    console.log(`压缩率: ${((1 - compressedFile.size / file.size) * 100).toFixed(2)}%`)
+
     return compressedFile
   } catch (error) {
     console.error('视频压缩失败，详细错误:', error)
