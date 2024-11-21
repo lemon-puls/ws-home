@@ -219,5 +219,20 @@ const emit = defineEmits(['select'])
   height: 90vh;
   display: flex;
   flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+:deep(.el-dialog__header) {
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  margin-right: 0;
+  padding: 16px 20px;
+}
+
+:deep(.el-dialog__body) {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
 }
 </style>
