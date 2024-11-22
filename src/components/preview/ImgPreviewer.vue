@@ -54,6 +54,7 @@ const emit = defineEmits(['select'])
       v-if="dialogVisible"
       :url-list="props.previewSrcList || [props.src]"
       :initial-index="props.initialIndex || 0"
+      :infinite="false"
       @close="dialogVisible = false"
     />
   </div>

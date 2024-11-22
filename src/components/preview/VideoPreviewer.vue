@@ -49,22 +49,21 @@ const handleClick = () => {
 
 // 切换到上一个视频
 const prevVideo = () => {
-  if (!props.previewSrcList?.length) return
+  if (!props.previewSrcList?.length || currentIndex.value <= 0) return
   if (videoRef.value) {
     videoRef.value.pause() // 暂停当前视频
   }
-  currentIndex.value =
-    (currentIndex.value - 1 + props.previewSrcList.length) % props.previewSrcList.length
+  currentIndex.value = currentIndex.value - 1
   playVideo()
 }
 
 // 切换到下一个视频
 const nextVideo = () => {
-  if (!props.previewSrcList?.length) return
+  if (!props.previewSrcList?.length || currentIndex.value >= props.previewSrcList.length - 1) return
   if (videoRef.value) {
     videoRef.value.pause() // 暂停当前视频
   }
-  currentIndex.value = (currentIndex.value + 1) % props.previewSrcList.length
+  currentIndex.value = currentIndex.value + 1
   playVideo()
 }
 
@@ -99,7 +98,11 @@ const emit = defineEmits(['select'])
     >
       <div class="video-container">
         <!-- 左切换按钮 -->
-        <div v-if="props.previewSrcList?.length > 1" class="switch-btn prev" @click="prevVideo">
+        <div
+          v-if="props.previewSrcList?.length > 1 && currentIndex > 0"
+          class="switch-btn prev"
+          @click="prevVideo"
+        >
           <el-icon><ArrowLeft /></el-icon>
         </div>
 
@@ -113,7 +116,11 @@ const emit = defineEmits(['select'])
         </video>
 
         <!-- 右切换按钮 -->
-        <div v-if="props.previewSrcList?.length > 1" class="switch-btn next" @click="nextVideo">
+        <div
+          v-if="props.previewSrcList?.length > 1 && currentIndex < props.previewSrcList.length - 1"
+          class="switch-btn next"
+          @click="nextVideo"
+        >
           <el-icon><ArrowRight /></el-icon>
         </div>
       </div>
