@@ -104,7 +104,7 @@ const getImgList = async () => {
 
   loading.value = true
   try {
-    const res = await Service.postAlbumImgList({
+    const res = await Service.postAlbumMediaList({
       album_id: albumStore.currentAlbumId,
       cursor: cursor.value,
       pageSize: pageSize,
@@ -182,7 +182,7 @@ const deleteSelectedImages = async () => {
       .map((img) => img.url)
 
     // 调用后端删除图片记录
-    const res = await Service.deleteAlbumImg(selectedImages.value.join(','))
+    const res = await Service.deleteAlbumMedia(selectedImages.value.join(','))
 
     if (res.code === 0) {
       // 删除成功后，删除 COS 上的文件
@@ -308,9 +308,9 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     compressedFileSizes.delete(uploadFile.uid)
 
     // 调用后端接口保存图片地址
-    const res = await Service.postAlbumImg({
+    const res = await Service.postAlbumMedia({
       album_id: albumStore.currentAlbumId,
-      album_imgs: [
+      medias: [
         {
           url: response,
           is_raw: !props.isCompress,
