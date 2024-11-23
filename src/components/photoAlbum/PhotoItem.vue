@@ -87,10 +87,6 @@ class CompressionQueue {
 // 创建压缩队列实例
 const compressionQueue = new CompressionQueue()
 
-// 添加筛选类型
-const filterType = ref('compressed')
-//
-
 // 重置并刷新列表的方法
 const resetAndRefresh = (params: { type?: number; isRaw?: boolean }) => {
   filterParams.value = params
@@ -324,7 +320,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
     if (res.code === 0) {
       // 将图片地址添加到图片列表前面
       imgList.value.unshift({
-        id: res.data[response].id,
+        id: res.data[response],
         url: response,
         is_raw: isVideo(response) ? true : !props.isCompress,
         size: sizeInMB // 存储转换后的 MB 大小
