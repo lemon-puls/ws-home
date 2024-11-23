@@ -32,9 +32,14 @@
         <div class="top-bar">
           <div style="display: flex; align-items: center; gap: 20px">
             <el-radio-group v-model="filterType" size="small">
-              <el-radio-button label="all" value="all">全部</el-radio-button>
-              <el-radio-button label="compressed" value="compressed">压缩</el-radio-button>
-              <el-radio-button label="raw" value="raw">原图</el-radio-button>
+              <el-radio-button label="all">全部</el-radio-button>
+              <el-radio-button label="image">图片</el-radio-button>
+              <el-radio-button label="video">视频</el-radio-button>
+            </el-radio-group>
+            <el-radio-group v-model="imageType" size="small">
+              <el-radio-button label="all">全部</el-radio-button>
+              <el-radio-button label="compressed">压缩</el-radio-button>
+              <el-radio-button label="raw">原图</el-radio-button>
             </el-radio-group>
             <el-switch
               v-if="isEditing"
@@ -231,22 +236,19 @@ const deleteImgs = () => {
   photoItemRef.value.deleteSelectedImages()
 }
 
-// 筛选选项
-const filterOptions = [
-  { label: '压缩图', value: 'compressed' },
-  { label: '原图', value: 'raw' },
-  { label: '全部', value: 'all' }
-]
-
-// 筛选类型
-const filterType = ref('compressed')
+// 媒体类型筛选
+const filterType = ref('all')
+// 图片类型筛选
+const imageType = ref('compressed')
 
 // 监听筛选类型变化
-watch(filterType, (newValue) => {
-  // 将筛选值传递给 PhotoItem 组件
+watch([filterType, imageType], ([newFilterType, newImageType]) => {
   if (photoItemRef.value) {
-    photoItemRef.value.resetAndRefresh(newValue)
+    const params = {
+      type: newFilterType === 'image' ? 0 : newFilterType === 'video' ? 1 : undefined,
+      isRaw: newImageType === 'raw' ? true : newImageType === 'compressed' ? false : undefined
+    }
+    photoItemRef.value.resetAndRefresh(params)
   }
 })
-
 </script>

@@ -32,6 +32,7 @@ const imgList = ref<AlbumImage[]>([])
 const loading = ref(false)
 const cursor = ref('')
 const isLast = ref(false)
+const filterParams = ref({ type: undefined, isRaw: false })
 const pageSize = 20
 
 const uploadingCount = ref(0)
@@ -88,10 +89,11 @@ const compressionQueue = new CompressionQueue()
 
 // 添加筛选类型
 const filterType = ref('compressed')
+//
 
 // 重置并刷新列表的方法
-const resetAndRefresh = (type: string) => {
-  filterType.value = type
+const resetAndRefresh = (params: { type?: number; isRaw?: boolean }) => {
+  filterParams.value = params
   imgList.value = []
   cursor.value = ''
   isLast.value = false
@@ -108,7 +110,8 @@ const getImgList = async () => {
       album_id: albumStore.currentAlbumId,
       cursor: cursor.value,
       pageSize: pageSize,
-      is_raw: filterType.value === 'all' ? undefined : filterType.value === 'raw'
+      type: filterParams.value.type,
+      is_raw: filterParams.value.isRaw
     })
 
     if (res.code === 0) {
