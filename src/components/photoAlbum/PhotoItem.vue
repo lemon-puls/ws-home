@@ -313,7 +313,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       medias: [
         {
           url: response,
-          is_raw: !props.isCompress,
+          is_raw: isVideo(response) ? true : !props.isCompress,
           size: sizeInMB // 存储转换后的 MB 大小
         }
       ]
@@ -323,12 +323,12 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
       imgList.value.unshift({
         id: res.data[response].id,
         url: response,
-        is_raw: !props.isCompress,
+        is_raw: isVideo(response) ? true : !props.isCompress,
         size: sizeInMB // 存储转换后的 MB 大小
       })
       // 只在所有图片都上传完成时显示成功消息
       if (uploadingCount.value === totalUploadCount.value) {
-        ElMessage.success(`${totalUploadCount.value}张图片添加成功`)
+        ElMessage.success(`${totalUploadCount.value} 个媒体添加成功`)
         uploadingCount.value = 0 // 重置计数器
         clearUploadFiles() // 清空上传列表
         $emit('onUpdate') // 触发更新事件
