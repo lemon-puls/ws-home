@@ -10,7 +10,16 @@
       <div id="courseItemId" @click="$emit('click')">
         <div :class="{ container: true }">
           <img :src="album.cover_img" />
-          <span>{{ album.photo_count || 0 }} p</span>
+          <div class="media-count">
+            <span>
+              <el-icon><Picture /></el-icon>
+              {{ album.photo_count || 0 }}
+            </span>
+            <span>
+              <el-icon><VideoCamera /></el-icon>
+              {{ album.video_count || 0 }}
+            </span>
+          </div>
         </div>
         <div class="title">
           <span>{{ album.name }}</span>
@@ -42,7 +51,7 @@
 import { defineProps, ref } from 'vue'
 import SvgIcon from '@/icons/SvgIcon'
 import type { vo_AlbumVO } from '../../../generated'
-import { Delete, Edit } from '@element-plus/icons-vue'
+import { Delete, Edit, Picture, VideoCamera } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Service } from '../../../generated'
 import { useAlbumStore } from '@/stores/album'
@@ -94,7 +103,7 @@ const handleEdit = () => {
     description: props.album.description,
     coverImgUrl: props.album.cover_img,
     // albumImgs: props.album.album_imgs?.map((img) => img.url) || []
-    startTime: props.album.start_time,
+    startTime: props.album.start_time
   }
 
   // 通过 store 传递编辑数据并打开编辑弹窗
@@ -184,14 +193,28 @@ const formatDate = (dateStr: string) => {
       border-radius: 10px;
     }
 
-    span {
+    .media-count {
       position: absolute;
       bottom: 0;
       right: 0;
-      color: white;
-      margin-right: 5px;
-      margin-bottom: 5px;
-      font-size: min(1vw, 14px);
+      margin: 5px;
+      display: flex;
+      gap: 8px;
+
+      span {
+        display: flex;
+        align-items: center;
+        color: white;
+        font-size: min(1vw, 14px);
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 2px 6px;
+        border-radius: 4px;
+
+        .el-icon {
+          margin-right: 3px;
+          font-size: min(1vw, 14px);
+        }
+      }
     }
 
     .overlay {
