@@ -6,6 +6,7 @@ import { Service } from '../../../../generated'
 import { ElMessage } from 'element-plus'
 import { useAlbumStore } from '@/stores/album'
 import { formatSize } from '../../../utils/ByteUtils'
+import { Picture, VideoCamera } from '@element-plus/icons-vue'
 
 const albumStore = useAlbumStore()
 
@@ -20,6 +21,7 @@ interface AlbumInfo {
   createTime: string
   author: Author
   photoCount: number
+  videoCount: number
   totalSize: number
   startTime: string
 }
@@ -136,9 +138,16 @@ const handleDescClick = async () => {
       </div>
 
       <div class="album-info-stats">
-        <span
-          ><span class="photo-count">{{ albumInfo.photoCount }}</span> 张照片</span
-        >
+        <div class="media-count">
+          <span>
+            <el-icon><Picture /></el-icon>
+            <span class="photo-count">{{ albumInfo.photoCount }}</span>
+          </span>
+          <span>
+            <el-icon><VideoCamera /></el-icon>
+            <span class="video-count">{{ albumInfo.videoCount }}</span>
+          </span>
+        </div>
         <span class="total-size">{{ albumInfo.totalSize }} MB</span>
       </div>
 
@@ -266,6 +275,31 @@ const handleDescClick = async () => {
   &-title,
   &-desc {
     cursor: pointer;
+  }
+}
+
+.media-count {
+  display: flex;
+  gap: 12px;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .el-icon {
+      font-size: 16px;
+    }
+
+    .photo-count {
+      color: #ff4757;
+      font-weight: 600;
+    }
+
+    .video-count {
+      color: #2e86de;
+      font-weight: 600;
+    }
   }
 }
 </style>
