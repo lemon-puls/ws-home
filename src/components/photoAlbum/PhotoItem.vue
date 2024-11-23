@@ -22,12 +22,14 @@ import type { UploadInstance } from 'element-plus'
 import VideoPreviewer from '@/components/preview/VideoPreviewer.vue'
 
 const selectedImages = ref<number[]>([])
+
 interface AlbumImage {
   id: number
   url: string
   is_raw: boolean
   size?: number
 }
+
 const imgList = ref<AlbumImage[]>([])
 const loading = ref(false)
 const cursor = ref('')
@@ -220,6 +222,12 @@ const ajaxUpload: UploadRequestHandler = (option) => {
   console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
   const file = option.file
   const isVideo = file.type.startsWith('video/')
+
+  // 单个媒体不能大于 30 MB
+  if (sizeInMB > 30) {
+    ElMessage.error('单个媒体不能大于 30 MB')
+    return
+  }
 
   if (!isVideo && props.isCompress) {
     // 只对图片进行压缩
