@@ -2,7 +2,7 @@
   <el-dialog
     v-model="dialogVisible"
     title="相册统计"
-    width="900px"
+    width="1080px"
     :show-close="true"
     class="stats-dialog"
   >
@@ -14,6 +14,16 @@
         <div class="stats-content">
           <div class="stats-value">{{ stats.totalPhotos }}</div>
           <div class="stats-label">总照片数</div>
+        </div>
+      </div>
+
+      <div class="stats-item">
+        <div class="stats-icon">
+          <el-icon><VideoCamera /></el-icon>
+        </div>
+        <div class="stats-content">
+          <div class="stats-value">{{ stats.totalVideos }}</div>
+          <div class="stats-label">总视频数</div>
         </div>
       </div>
 
@@ -32,7 +42,7 @@
           <el-icon><Files /></el-icon>
         </div>
         <div class="stats-content">
-          <div class="stats-value">{{ formatMBToReadableString(stats.totalSize)  }}</div>
+          <div class="stats-value">{{ formatMBToReadableString(stats.totalSize) }}</div>
           <div class="stats-label">总存储空间</div>
         </div>
       </div>
@@ -42,7 +52,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Picture, Collection, Files } from '@element-plus/icons-vue'
+import { Picture, Collection, Files, VideoCamera } from '@element-plus/icons-vue'
 import { formatMBToReadableString, formatSize } from '@/utils/ByteUtils'
 import { Service } from '../../../generated'
 
@@ -61,7 +71,8 @@ const dialogVisible = computed({
 const stats = ref({
   totalPhotos: 0,
   totalAlbums: 0,
-  totalSize: 0
+  totalSize: 0,
+  totalVideos: 0
 })
 
 // 获取统计数据
