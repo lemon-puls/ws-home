@@ -14,7 +14,7 @@ const formatMBToReadableString = (mb: number) => {
     result += `${gb} GB`
   }
   if (remainingMB > 0) {
-    result += (result ? ' + ' : '') + `${remainingMB} MB`
+    result += (result ? ' + ' : '') + `${remainingMB.toFixed(2)} MB`
   }
 
   return result || '0 MB'
