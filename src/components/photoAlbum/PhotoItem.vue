@@ -34,7 +34,10 @@ const imgList = ref<AlbumImage[]>([])
 const loading = ref(false)
 const cursor = ref('')
 const isLast = ref(false)
-const filterParams = ref({ type: undefined, isRaw: false })
+const filterParams = ref<{
+  type?: number
+  isRaw?: boolean
+}>({ type: undefined, isRaw: false })
 const pageSize = 20
 
 const uploadingCount = ref(0)
@@ -226,7 +229,7 @@ const ajaxUpload: UploadRequestHandler = (option) => {
   // 单个媒体不能大于 30 MB
   if (sizeInMB > 30) {
     ElMessage.error('单个媒体不能大于 30 MB')
-    return
+    return Promise.reject()
   }
 
   if (!isVideo && props.isCompress) {

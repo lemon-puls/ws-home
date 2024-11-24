@@ -99,7 +99,7 @@ const emit = defineEmits(['select'])
       <div class="video-container">
         <!-- 左切换按钮 -->
         <div
-          v-if="props.previewSrcList?.length > 1 && currentIndex > 0"
+          v-if="(props.previewSrcList?.length ?? 0) > 1 && currentIndex > 0"
           class="switch-btn prev"
           @click="prevVideo"
         >
@@ -117,7 +117,11 @@ const emit = defineEmits(['select'])
 
         <!-- 右切换按钮 -->
         <div
-          v-if="props.previewSrcList?.length > 1 && currentIndex < props.previewSrcList.length - 1"
+          v-if="
+            props.previewSrcList &&
+            props.previewSrcList.length > 1 &&
+            currentIndex < props.previewSrcList.length - 1
+          "
           class="switch-btn next"
           @click="nextVideo"
         >

@@ -180,7 +180,8 @@ const albumInfo = ref({
   },
   startTime: '',
   totalSize: 0,
-  photoCount: 0
+  photoCount: 0,
+  videoCount: 0
 })
 
 // 获取相册详情
@@ -189,7 +190,6 @@ const getAlbumDetail = async (albumId: number) => {
     const res = await Service.getAlbum(albumId.toString())
     if (res.code === 0) {
       const data = res.data
-      console.log('相册详情数据:', data)
       // 更新相册信息
       albumInfo.value = {
         title: data.name,

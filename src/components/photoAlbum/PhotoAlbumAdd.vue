@@ -114,11 +114,11 @@
 <script setup lang="ts">
 import { reactive, ref, watch, computed } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { type dto_AlbumImgAddDTO, Service } from '../../../generated'
 import { useUserStore } from '@/stores/user'
 import { useAlbumStore } from '@/stores/album'
 import SingleImgUpload from '@/components/upload/SingleImgUpload.vue'
 import MutilImgUpload from '@/components/upload/MutilImgUpload.vue'
+import { Service } from '../../../generated'
 
 const albumStore = useAlbumStore()
 const userStore = useUserStore()
