@@ -226,9 +226,9 @@ const ajaxUpload: UploadRequestHandler = (option) => {
   const file = option.file
   const isVideo = file.type.startsWith('video/')
 
-  // 单个媒体不能大于 30 MB
-  if (sizeInMB > 30) {
-    ElMessage.error('单个媒体不能大于 30 MB')
+  // 单个媒体不能大于 60 MB
+  if (sizeInMB > 60) {
+    ElMessage.error('单个媒体不能大于 60 MB')
     return Promise.reject()
   }
 
