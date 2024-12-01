@@ -23,7 +23,7 @@ axios.interceptors.request.use(
   function (config) {
     // 如果是刷新token的请求，请求头已经设置了 Authorization （REFRESH_TOKEN）,
     // 这里不需要再设置 Authorization
-    if (!config.url.includes('/user/refresh')) {
+    if (!config.url?.includes('/user/refresh')) {
       const token = localStorage.getItem('ACCESS_TOKEN')
       if (token) {
         config.headers['Authorization'] = 'Bearer ' + token
