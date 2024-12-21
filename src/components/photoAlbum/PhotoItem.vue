@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, defineExpose, defineProps, defineEmits, onMounted, watch } from 'vue'
 import { useAlbumStore } from '@/stores/album'
+import ExifReader from 'exifreader'
 
 const albumStore = useAlbumStore()
 
@@ -20,6 +21,7 @@ import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
 import { compressImage } from '@/utils/FileUtils'
 import type { UploadInstance } from 'element-plus'
 import VideoPreviewer from '@/components/preview/VideoPreviewer.vue'
+import { getMetadata } from 'video-metadata-thumbnails'
 
 const selectedImages = ref<number[]>([])
 
@@ -219,6 +221,125 @@ defineExpose({
   resetAndRefresh
 })
 
+type ImageInfo = {
+  // 拍摄时间
+  takeTime: String | null
+  // 相机品牌
+  make: String | null
+  // 相机型号
+  model: String | null
+  // 位置信息 纬度
+  latitude: String | null
+  // 位置信息 经度
+  longitude: String | null
+  // ISO
+  iso: String | null
+  // 光圈
+  fNumber: String | null
+  // 快门速度
+  exposureTime: String | null
+  // 焦距
+  focalLength: String | null
+}
+
+type VideoInfo = {
+  // 拍摄时间
+  takeTime: String | null
+  // 视频时长（秒）
+  duration: number | null
+  // 分辨率
+  resolution: String | null
+  // 编码
+  codec: String | null
+  // 比特率
+  bitrate: number | null
+  // 帧率
+  fps: number | null
+}
+
+// 添加格式化时间的辅助函数
+const formatExifDateTime = (dateTimeStr: string | null): string | null => {
+  if (!dateTimeStr) return null
+  // 将 2023:03:12 19:09:22 转换为 2023-03-12 19:09:22
+  return dateTimeStr.replace(/(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
+}
+
+// 修改 getExifInfo 函数中的时间处理
+const getExifInfo = async (file: File): Promise<ImageInfo | undefined> => {
+  try {
+    const tags = await ExifReader.load(file)
+
+    // 获取并格式化拍摄时间
+    const originalTime = tags['DateTimeOriginal']?.description || tags['DateTime']?.description
+    const takeTime = formatExifDateTime(originalTime)
+
+    // 获取相机信息
+    const make = tags['Make']?.description
+    const model = tags['Model']?.description
+
+    // 获取GPS信息
+    const gpsLatitude = tags['GPSLatitude']?.description
+    const gpsLongitude = tags['GPSLongitude']?.description
+    const gpsLatitudeRef = tags['GPSLatitudeRef']?.value?.[0]
+    const gpsLongitudeRef = tags['GPSLongitudeRef']?.value?.[0]
+
+    // 转换GPS坐标
+    let latitude = null
+    let longitude = null
+    if (gpsLatitude && gpsLatitudeRef) {
+      latitude = gpsLatitudeRef === 'N' ? gpsLatitude : -gpsLatitude
+    }
+    if (gpsLongitude && gpsLongitudeRef) {
+      longitude = gpsLongitudeRef === 'E' ? gpsLongitude : -gpsLongitude
+    }
+
+    // 构造统一的 MediaInfo 对象
+    const mediaInfo: ImageInfo = {
+      takeTime: takeTime,
+      make: make || null,
+      model: model || null,
+      latitude: latitude?.toString() || null,
+      longitude: longitude?.toString() || null,
+      iso: tags['ISOSpeedRatings']?.description || null,
+      fNumber: tags['FNumber']?.description || null,
+      exposureTime: tags['ExposureTime']?.description || null,
+      focalLength: tags['FocalLength']?.description || null
+    }
+
+    // console.log('图片 EXIF 信息：', mediaInfo)
+    return mediaInfo
+  } catch (error) {
+    console.error('读取 EXIF 信息失败:', error)
+    return
+  }
+}
+
+// 修改 getVideoInfo 函数中的时间处理
+const getVideoInfo = async (file: File): Promise<VideoInfo | undefined> => {
+  try {
+    const metadata = await getMetadata(file)
+    const creationTime = metadata.creationTime || metadata.modificationTime
+
+    // 构造统一的 MediaInfo 对象
+    const videoInfo: VideoInfo = {
+      takeTime: creationTime
+        ? new Date(creationTime).toISOString().replace('T', ' ').slice(0, 19)
+        : null,
+      duration: metadata.duration || null,
+      resolution: metadata.width && metadata.height ? `${metadata.width}x${metadata.height}` : null,
+      codec: metadata.codec || null,
+      bitrate: metadata.bitrate || null,
+      fps: metadata.fps || null
+    }
+
+    // console.log('视频信息：', mediaInfo)
+    return videoInfo
+  } catch (error) {
+    console.error('读取视频信息失败:', error)
+    return
+  }
+}
+
 // 修改 ajaxUpload 函数
 const ajaxUpload: UploadRequestHandler = (option) => {
   const sizeInMB = option.file.size / (1024 * 1024)
@@ -310,6 +431,16 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   uploadingCount.value++
 
   try {
+    // 根据文件类型读取不同的元数据信息
+    let metadata: ImageInfo | VideoInfo | undefined
+    if (uploadFile.raw.type.startsWith('video/')) {
+      metadata = await getVideoInfo(uploadFile.raw)
+    } else {
+      metadata = await getExifInfo(uploadFile.raw)
+    }
+
+    console.log('元数据信息：', metadata)
+
     // 获取文件大小(如果有压缩则使用压缩后的大小)
     const fileSize = compressedFileSizes.get(uploadFile.uid) || uploadFile.size || 0
     const sizeInMB = Number((fileSize / (1024 * 1024)).toFixed(2))
@@ -328,6 +459,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
         }
       ]
     })
+
     if (res.code === 0) {
       // 将图片地址添加到图片列表前面
       imgList.value.unshift({
