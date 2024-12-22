@@ -608,12 +608,9 @@ const $refs = ref<{ [key: string]: { isPreviewVisible: boolean } }>({})
                   <span class="label">拍摄时间：</span>
                   <span class="value">{{ img.meta.takeTime }}</span>
                 </div>
-                <div class="info-item" v-if="img.meta.latitude && img.meta.longitude">
+                <div class="info-item" v-if="img.meta?.address">
                   <span class="label">位置：</span>
-                  <span class="value"
-                    >纬度 {{ Number(img.meta.latitude).toFixed(2) }} % 经度
-                    {{ Number(img.meta.longitude).toFixed(2) }} %</span
-                  >
+                  <span class="value">{{ img.meta.address }}</span>
                 </div>
                 <div class="info-item" v-if="img.meta.make || img.meta.model">
                   <span class="label">相机：</span>
@@ -658,12 +655,9 @@ const $refs = ref<{ [key: string]: { isPreviewVisible: boolean } }>({})
                   <span class="label">帧率：</span>
                   <span class="value">{{ img.meta.fps }} FPS</span>
                 </div>
-                <div class="info-item" v-if="img.meta.latitude && img.meta.longitude">
+                <div class="info-item" v-if="img.meta?.address">
                   <span class="label">位置：</span>
-                  <span class="value"
-                    >纬度 {{ Number(img.meta.latitude).toFixed(2) }} % 经度
-                    {{ Number(img.meta.longitude).toFixed(2) }} %</span
-                  >
+                  <span class="value">{{ img.meta.address }}</span>
                 </div>
               </template>
             </div>
