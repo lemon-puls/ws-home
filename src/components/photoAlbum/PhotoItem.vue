@@ -517,6 +517,9 @@ const isVideo = (url: string) => {
   const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov']
   return videoExtensions.some((ext) => url.toLowerCase().endsWith(ext))
 }
+
+// 添加 refs 声明
+const $refs = ref<{ [key: string]: { isPreviewVisible: boolean } }>({})
 </script>
 
 <template>
@@ -550,10 +553,12 @@ const isVideo = (url: string) => {
             popper-class="media-info-popover"
             :show-after="100"
             :hide-after="100"
+            :disabled="$refs[`previewer-${img.id}`]?.isPreviewVisible"
           >
             <template #reference>
               <template v-if="!isVideo(img.url)">
                 <ImgPreviewer
+                  :ref="(el) => ($refs[`previewer-${img.id}`] = el)"
                   :src="img.url"
                   :preview-src-list="
                     imgList.filter((item) => !isVideo(item.url)).map((item) => item.url)
@@ -573,6 +578,7 @@ const isVideo = (url: string) => {
               </template>
               <template v-else>
                 <VideoPreviewer
+                  :ref="(el) => ($refs[`previewer-${img.id}`] = el)"
                   :src="img.url"
                   :preview-src-list="
                     imgList.filter((item) => isVideo(item.url)).map((item) => item.url)

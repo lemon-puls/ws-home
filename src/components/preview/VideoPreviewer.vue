@@ -76,6 +76,10 @@ const playVideo = async () => {
 }
 
 const emit = defineEmits(['select'])
+
+defineExpose({
+  isPreviewVisible: dialogVisible
+})
 </script>
 
 <template>

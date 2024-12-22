@@ -37,6 +37,11 @@ const handleClick = () => {
 }
 
 const emit = defineEmits(['select'])
+
+// 暴露预览状态给父组件
+defineExpose({
+  isPreviewVisible: dialogVisible
+})
 </script>
 
 <template>
