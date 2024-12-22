@@ -30,6 +30,7 @@ interface AlbumImage {
   url: string
   is_raw: boolean
   size?: number
+  meta?: ImageInfo | VideoInfo
 }
 
 const imgList = ref<AlbumImage[]>([])
@@ -466,7 +467,8 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
         id: res.data[response],
         url: response,
         is_raw: isVideo(response) ? true : !props.isCompress,
-        size: sizeInMB // 存储转换后的 MB 大小
+        size: sizeInMB, // 存储转换后的 MB 大小
+        meta: metadata
       })
       // 只在所有图片都上传完成时显示成功消息
       if (uploadingCount.value === totalUploadCount.value) {
@@ -527,43 +529,169 @@ const isVideo = (url: string) => {
       </div>
     </el-upload>
 
-    <template v-for="(img, index) in imgList" :key="img.id">
-      <!-- 图片预览组件 -->
-      <ImgPreviewer
-        v-if="!isVideo(img.url)"
-        :src="img.url"
-        :preview-src-list="imgList.filter((item) => !isVideo(item.url)).map((item) => item.url)"
-        :initial-index="
-          imgList.filter((item, idx) => !isVideo(item.url) && idx <= index).length - 1
-        "
-        :is-editing="props.modelValue"
-        :class="{ selected: selectedImages.includes(img.id) }"
-        :style="{
-          width: 'clamp(150px, 12vw, 220px)',
-          height: 'auto',
-          margin: '10px'
-        }"
-        @select="toggleSelection(img.id)"
-      />
+    <div class="photo-item">
+      <template v-for="(img, index) in imgList" :key="img.id">
+        <!-- 当有 meta 数据时才显示 popover -->
+        <template v-if="img.meta">
+          <el-popover
+            placement="top"
+            :width="300"
+            trigger="hover"
+            popper-class="media-info-popover"
+            :show-after="100"
+            :hide-after="100"
+          >
+            <template #reference>
+              <template v-if="!isVideo(img.url)">
+                <ImgPreviewer
+                  :src="img.url"
+                  :preview-src-list="
+                    imgList.filter((item) => !isVideo(item.url)).map((item) => item.url)
+                  "
+                  :initial-index="
+                    imgList.filter((item, idx) => !isVideo(item.url) && idx <= index).length - 1
+                  "
+                  :is-editing="props.modelValue"
+                  :class="{ selected: selectedImages.includes(img.id) }"
+                  :style="{
+                    width: 'clamp(150px, 12vw, 220px)',
+                    height: 'auto',
+                    margin: '10px'
+                  }"
+                  @select="toggleSelection(img.id)"
+                />
+              </template>
+              <template v-else>
+                <VideoPreviewer
+                  :src="img.url"
+                  :preview-src-list="
+                    imgList.filter((item) => isVideo(item.url)).map((item) => item.url)
+                  "
+                  :initial-index="
+                    imgList
+                      .filter((item) => isVideo(item.url))
+                      .findIndex((item) => item.url === img.url)
+                  "
+                  :is-editing="props.modelValue"
+                  :class="{ selected: selectedImages.includes(img.id) }"
+                  :style="{
+                    width: 'clamp(150px, 12vw, 220px)',
+                    height: 'auto',
+                    margin: '10px'
+                  }"
+                  @select="toggleSelection(img.id)"
+                />
+              </template>
+            </template>
 
-      <!-- 视频预览组件 -->
-      <VideoPreviewer
-        v-else
-        :src="img.url"
-        :preview-src-list="imgList.filter((item) => isVideo(item.url)).map((item) => item.url)"
-        :initial-index="
-          imgList.filter((item) => isVideo(item.url)).findIndex((item) => item.url === img.url)
-        "
-        :is-editing="props.modelValue"
-        :class="{ selected: selectedImages.includes(img.id) }"
-        :style="{
-          width: 'clamp(150px, 12vw, 220px)',
-          height: 'auto',
-          margin: '10px'
-        }"
-        @select="toggleSelection(img.id)"
-      />
-    </template>
+            <!-- 元数据内容 -->
+            <div class="media-info">
+              <template v-if="!isVideo(img.url)">
+                <!-- 图片元数据内容 -->
+                <div class="info-item" v-if="img.meta.takeTime">
+                  <span class="label">拍摄时间：</span>
+                  <span class="value">{{ img.meta.takeTime }}</span>
+                </div>
+                <div class="info-item" v-if="img.meta.latitude && img.meta.longitude">
+                  <span class="label">位置：</span>
+                  <span class="value"
+                    >纬度 {{ Number(img.meta.latitude).toFixed(2) }} % 经度
+                    {{ Number(img.meta.longitude).toFixed(2) }} %</span
+                  >
+                </div>
+                <div class="info-item" v-if="img.meta.make || img.meta.model">
+                  <span class="label">相机：</span>
+                  <span class="value">{{ img.meta.make }} {{ img.meta.model }}</span>
+                </div>
+                <div class="info-item" v-if="img.meta.iso">
+                  <span class="label">ISO：</span>
+                  <span class="value">{{ img.meta.iso }}</span>
+                </div>
+                <div class="info-item" v-if="img.meta.fNumber">
+                  <span class="label">光圈：</span>
+                  <span class="value">f/{{ img.meta.fNumber }}</span>
+                </div>
+                <div class="info-item" v-if="img.meta.exposureTime">
+                  <span class="label">快门：</span>
+                  <span class="value">{{ img.meta.exposureTime }}s</span>
+                </div>
+                <div class="info-item" v-if="img.meta.focalLength">
+                  <span class="label">焦距：</span>
+                  <span class="value">{{ img.meta.focalLength }}mm</span>
+                </div>
+              </template>
+              <template v-else>
+                <!-- 视频元数据内容 -->
+                <div class="info-item" v-if="img.meta.takeTime">
+                  <span class="label">拍摄时间：</span>
+                  <span class="value">{{ img.meta.takeTime }}</span>
+                </div>
+                <div class="info-item" v-if="img.meta.duration">
+                  <span class="label">时长：</span>
+                  <span class="value">{{ Math.round(img.meta.duration) }}秒</span>
+                </div>
+                <div class="info-item" v-if="img.meta.resolution">
+                  <span class="label">分辨率：</span>
+                  <span class="value">{{ img.meta.resolution }}</span>
+                </div>
+                <div class="info-item" v-if="img.meta.codec">
+                  <span class="label">编码：</span>
+                  <span class="value">{{ img.meta.codec }}</span>
+                </div>
+                <div class="info-item" v-if="img.meta.fps">
+                  <span class="label">帧率：</span>
+                  <span class="value">{{ img.meta.fps }} FPS</span>
+                </div>
+              </template>
+            </div>
+          </el-popover>
+        </template>
+
+        <!-- 当没有 meta 数据时直接显示预览组件 -->
+        <template v-else>
+          <template v-if="!isVideo(img.url)">
+            <ImgPreviewer
+              :src="img.url"
+              :preview-src-list="
+                imgList.filter((item) => !isVideo(item.url)).map((item) => item.url)
+              "
+              :initial-index="
+                imgList.filter((item, idx) => !isVideo(item.url) && idx <= index).length - 1
+              "
+              :is-editing="props.modelValue"
+              :class="{ selected: selectedImages.includes(img.id) }"
+              :style="{
+                width: 'clamp(150px, 12vw, 220px)',
+                height: 'auto',
+                margin: '10px'
+              }"
+              @select="toggleSelection(img.id)"
+            />
+          </template>
+          <template v-else>
+            <VideoPreviewer
+              :src="img.url"
+              :preview-src-list="
+                imgList.filter((item) => isVideo(item.url)).map((item) => item.url)
+              "
+              :initial-index="
+                imgList
+                  .filter((item) => isVideo(item.url))
+                  .findIndex((item) => item.url === img.url)
+              "
+              :is-editing="props.modelValue"
+              :class="{ selected: selectedImages.includes(img.id) }"
+              :style="{
+                width: 'clamp(150px, 12vw, 220px)',
+                height: 'auto',
+                margin: '10px'
+              }"
+              @select="toggleSelection(img.id)"
+            />
+          </template>
+        </template>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -658,5 +786,50 @@ const isVideo = (url: string) => {
       box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
     }
   }
+}
+
+.media-info {
+  padding: 8px;
+  z-index: 30000;
+
+  .info-item {
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .label {
+      color: #909399;
+      font-size: 13px;
+      white-space: nowrap;
+      margin-right: 8px;
+    }
+
+    .value {
+      color: #303133;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: right;
+    }
+  }
+}
+
+:deep(.el-popover.media-info-popover) {
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  z-index: 30000;
+  pointer-events: none;
+}
+
+// 确保图片容器有相对定位
+.img-previewer,
+.video-previewer {
+  position: relative;
+  display: inline-block;
 }
 </style>

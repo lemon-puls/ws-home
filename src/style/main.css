@@ -58,3 +58,7 @@
 .el-picker__popper {
   z-index: 20001 !important;
 }
+
+.el-popover {
+  z-index: 20000 !important;
+}
