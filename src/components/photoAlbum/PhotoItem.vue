@@ -122,7 +122,8 @@ const getImgList = async () => {
       const newImages = res.data.data.map((item: any) => ({
         id: item.id,
         url: item.url,
-        is_raw: item.is_raw
+        is_raw: item.is_raw,
+        meta: item.meta
       }))
       imgList.value.push(...newImages)
 
@@ -256,6 +257,9 @@ type VideoInfo = {
   bitrate: number | null
   // 帧率
   fps: number | null
+  // 新增位置字段
+  latitude: String | null
+  longitude: String | null
 }
 
 // 添加格式化时间的辅助函数
@@ -321,7 +325,10 @@ const getVideoInfo = async (file: File): Promise<VideoInfo | undefined> => {
     const metadata = await getMetadata(file)
     const creationTime = metadata.creationTime || metadata.modificationTime
 
-    // 构造统一的 MediaInfo 对象
+    // 从元数据中获取位置信息
+    const latitude = metadata.location?.latitude?.toString() || null
+    const longitude = metadata.location?.longitude?.toString() || null
+
     const videoInfo: VideoInfo = {
       takeTime: creationTime
         ? new Date(creationTime).toISOString().replace('T', ' ').slice(0, 19)
@@ -330,10 +337,12 @@ const getVideoInfo = async (file: File): Promise<VideoInfo | undefined> => {
       resolution: metadata.width && metadata.height ? `${metadata.width}x${metadata.height}` : null,
       codec: metadata.codec || null,
       bitrate: metadata.bitrate || null,
-      fps: metadata.fps || null
+      fps: metadata.fps || null,
+      // 添加位置信息
+      latitude,
+      longitude
     }
 
-    // console.log('视频信息：', mediaInfo)
     return videoInfo
   } catch (error) {
     console.error('读取视频信息失败:', error)
@@ -456,7 +465,8 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
         {
           url: response,
           is_raw: isVideo(response) ? true : !props.isCompress,
-          size: sizeInMB // 存储转换后的 MB 大小
+          size: sizeInMB, // 存储转换后的 MB 大小
+          meta: metadata
         }
       ]
     })
@@ -641,6 +651,13 @@ const isVideo = (url: string) => {
                 <div class="info-item" v-if="img.meta.fps">
                   <span class="label">帧率：</span>
                   <span class="value">{{ img.meta.fps }} FPS</span>
+                </div>
+                <div class="info-item" v-if="img.meta.latitude && img.meta.longitude">
+                  <span class="label">位置：</span>
+                  <span class="value"
+                    >纬度 {{ Number(img.meta.latitude).toFixed(2) }} % 经度
+                    {{ Number(img.meta.longitude).toFixed(2) }} %</span
+                  >
                 </div>
               </template>
             </div>
