@@ -336,24 +336,22 @@ const getExifInfo = async (file: File): Promise<ImageInfo | undefined> => {
 const getVideoInfo = async (file: File): Promise<VideoInfo | undefined> => {
   try {
     const metadata = await getMetadata(file)
-    const creationTime = metadata.creationTime || metadata.modificationTime
+    // const creationTime = metadata.creationTime || metadata.modificationTime
 
     // 从元数据中获取位置信息
-    const latitude = metadata.location?.latitude?.toString() || null
-    const longitude = metadata.location?.longitude?.toString() || null
+    // const latitude = metadata.location?.latitude?.toString() || null
+    // const longitude = metadata.location?.longitude?.toString() || null
 
     const videoInfo: VideoInfo = {
-      takeTime: creationTime
-        ? new Date(creationTime).toISOString().replace('T', ' ').slice(0, 19)
-        : null,
+      takeTime: null,
       duration: metadata.duration || null,
       resolution: metadata.width && metadata.height ? `${metadata.width}x${metadata.height}` : null,
-      codec: metadata.codec || null,
-      bitrate: metadata.bitrate || null,
-      fps: metadata.fps || null,
+      codec: null,
+      bitrate: null,
+      fps: null,
       // 添加位置信息
-      latitude,
-      longitude
+      latitude: null,
+      longitude: null
     }
 
     return videoInfo
