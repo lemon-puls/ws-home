@@ -140,7 +140,7 @@ const getImgList = async () => {
   }
 }
 
-// 监听滚动到底部
+// 监听滚到底部
 const handleScroll = (e: Event) => {
   console.log('handleScroll')
   const target = e.target as HTMLElement
@@ -234,6 +234,8 @@ type ImageInfo = {
   latitude: String | null
   // 位置信息 经度
   longitude: String | null
+  // 地址（由后端通过经纬度转换）
+  address: String | null
   // ISO
   iso: String | null
   // 光圈
@@ -260,6 +262,8 @@ type VideoInfo = {
   // 新增位置字段
   latitude: String | null
   longitude: String | null
+  // 地址（由后端通过经纬度转换）
+  address: String | null
 }
 
 // 添加格式化时间的辅助函数
@@ -285,8 +289,16 @@ const getExifInfo = async (file: File): Promise<ImageInfo | undefined> => {
     // 获取GPS信息
     const gpsLatitude = tags['GPSLatitude']?.description
     const gpsLongitude = tags['GPSLongitude']?.description
-    const gpsLatitudeRef = tags['GPSLatitudeRef']?.value?.[0]
-    const gpsLongitudeRef = tags['GPSLongitudeRef']?.value?.[0]
+    const gpsLatitudeRef = Array.isArray(tags['GPSLatitudeRef']?.value)
+      ? tags['GPSLatitudeRef'].value[0]
+      : typeof tags['GPSLatitudeRef']?.value === 'string'
+        ? tags['GPSLatitudeRef'].value
+        : null
+    const gpsLongitudeRef = Array.isArray(tags['GPSLongitudeRef']?.value)
+      ? tags['GPSLongitudeRef'].value[0]
+      : typeof tags['GPSLongitudeRef']?.value === 'string'
+        ? tags['GPSLongitudeRef'].value
+        : null
 
     // 转换GPS坐标
     let latitude = null
@@ -308,7 +320,8 @@ const getExifInfo = async (file: File): Promise<ImageInfo | undefined> => {
       iso: tags['ISOSpeedRatings']?.description || null,
       fNumber: tags['FNumber']?.description || null,
       exposureTime: tags['ExposureTime']?.description || null,
-      focalLength: tags['FocalLength']?.description || null
+      focalLength: tags['FocalLength']?.description || null,
+      address: null
     }
 
     // console.log('图片 EXIF 信息：', mediaInfo)
@@ -399,7 +412,7 @@ const uploadFile = (option: any) => {
   cos.uploadFile(
     {
       Bucket: import.meta.env.VITE_COS_BUCKET /* 填写自己的 bucket，必须字段 */,
-      Region: import.meta.env.VITE_COS_REGION /* 存储桶所在地域，必须字段 */,
+      Region: import.meta.env.VITE_COS_REGION /* 存储所在地域，必须字段 */,
       Key:
         import.meta.env.VITE_COS_PATH_PREFIX +
         'ablum/' +
@@ -451,7 +464,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
 
     console.log('元数据信息：', metadata)
 
-    // 获取文件大小(如果有压缩则使用压缩后的大小)
+    // 获文件大小(如果有压缩则使用压缩后的大小)
     const fileSize = compressedFileSizes.get(uploadFile.uid) || uploadFile.size || 0
     const sizeInMB = Number((fileSize / (1024 * 1024)).toFixed(2))
 
@@ -518,8 +531,12 @@ const isVideo = (url: string) => {
   return videoExtensions.some((ext) => url.toLowerCase().endsWith(ext))
 }
 
-// 添加 refs 声明
-const $refs = ref<{ [key: string]: { isPreviewVisible: boolean } }>({})
+interface PreviewerRef {
+  isPreviewVisible: boolean
+}
+
+// 修改 ref 的类型定义，使用 Record 类型来允许字符串索引
+const $refs = ref<Record<string, PreviewerRef | undefined>>({})
 </script>
 
 <template>
@@ -612,25 +629,30 @@ const $refs = ref<{ [key: string]: { isPreviewVisible: boolean } }>({})
                   <span class="label">位置：</span>
                   <span class="value">{{ img.meta.address }}</span>
                 </div>
-                <div class="info-item" v-if="img.meta.make || img.meta.model">
+                <div
+                  class="info-item"
+                  v-if="(img.meta as ImageInfo)?.make || (img.meta as ImageInfo)?.model"
+                >
                   <span class="label">相机：</span>
-                  <span class="value">{{ img.meta.make }} {{ img.meta.model }}</span>
+                  <span class="value"
+                    >{{ (img.meta as ImageInfo).make }} {{ (img.meta as ImageInfo).model }}</span
+                  >
                 </div>
-                <div class="info-item" v-if="img.meta.iso">
+                <div class="info-item" v-if="(img.meta as ImageInfo)?.iso">
                   <span class="label">ISO：</span>
-                  <span class="value">{{ img.meta.iso }}</span>
+                  <span class="value">{{ (img.meta as ImageInfo).iso }}</span>
                 </div>
-                <div class="info-item" v-if="img.meta.fNumber">
+                <div class="info-item" v-if="(img.meta as ImageInfo)?.fNumber">
                   <span class="label">光圈：</span>
-                  <span class="value">f/{{ img.meta.fNumber }}</span>
+                  <span class="value">f/{{ (img.meta as ImageInfo).fNumber }}</span>
                 </div>
-                <div class="info-item" v-if="img.meta.exposureTime">
+                <div class="info-item" v-if="(img.meta as ImageInfo)?.exposureTime">
                   <span class="label">快门：</span>
-                  <span class="value">{{ img.meta.exposureTime }}s</span>
+                  <span class="value">{{ (img.meta as ImageInfo).exposureTime }}s</span>
                 </div>
-                <div class="info-item" v-if="img.meta.focalLength">
+                <div class="info-item" v-if="(img.meta as ImageInfo)?.focalLength">
                   <span class="label">焦距：</span>
-                  <span class="value">{{ img.meta.focalLength }}mm</span>
+                  <span class="value">{{ (img.meta as ImageInfo).focalLength }}mm</span>
                 </div>
               </template>
               <template v-else>
@@ -639,21 +661,23 @@ const $refs = ref<{ [key: string]: { isPreviewVisible: boolean } }>({})
                   <span class="label">拍摄时间：</span>
                   <span class="value">{{ img.meta.takeTime }}</span>
                 </div>
-                <div class="info-item" v-if="img.meta.duration">
+                <div class="info-item" v-if="(img.meta as VideoInfo)?.duration">
                   <span class="label">时长：</span>
-                  <span class="value">{{ Math.round(img.meta.duration) }}秒</span>
+                  <span class="value"
+                    >{{ Math.round((img.meta as VideoInfo)?.duration ?? 0) }}秒</span
+                  >
                 </div>
-                <div class="info-item" v-if="img.meta.resolution">
+                <div class="info-item" v-if="(img.meta as VideoInfo)?.resolution">
                   <span class="label">分辨率：</span>
-                  <span class="value">{{ img.meta.resolution }}</span>
+                  <span class="value">{{ (img.meta as VideoInfo).resolution }}</span>
                 </div>
-                <div class="info-item" v-if="img.meta.codec">
+                <div class="info-item" v-if="(img.meta as VideoInfo)?.codec">
                   <span class="label">编码：</span>
-                  <span class="value">{{ img.meta.codec }}</span>
+                  <span class="value">{{ (img.meta as VideoInfo).codec }}</span>
                 </div>
-                <div class="info-item" v-if="img.meta.fps">
+                <div class="info-item" v-if="(img.meta as VideoInfo)?.fps">
                   <span class="label">帧率：</span>
-                  <span class="value">{{ img.meta.fps }} FPS</span>
+                  <span class="value">{{ (img.meta as VideoInfo).fps }} FPS</span>
                 </div>
                 <div class="info-item" v-if="img.meta?.address">
                   <span class="label">位置：</span>
