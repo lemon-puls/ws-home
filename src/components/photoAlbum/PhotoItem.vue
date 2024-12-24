@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineExpose, defineProps, defineEmits, onMounted, watch } from 'vue'
+import { ref, defineExpose, defineProps, defineEmits, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useAlbumStore } from '@/stores/album'
 import ExifReader from 'exifreader'
 
@@ -351,7 +351,8 @@ const getVideoInfo = async (file: File): Promise<VideoInfo | undefined> => {
       fps: null,
       // 添加位置信息
       latitude: null,
-      longitude: null
+      longitude: null,
+      address: null
     }
 
     return videoInfo
@@ -454,12 +455,13 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   try {
     // 根据文件类型读取不同的元数据信息
     let metadata: ImageInfo | VideoInfo | undefined
-    if (uploadFile.raw.type.startsWith('video/')) {
-      metadata = await getVideoInfo(uploadFile.raw)
-    } else {
-      metadata = await getExifInfo(uploadFile.raw)
+    if (uploadFile?.raw?.type) {
+      if (uploadFile.raw.type.startsWith('video/')) {
+        metadata = await getVideoInfo(uploadFile.raw)
+      } else {
+        metadata = await getExifInfo(uploadFile.raw)
+      }
     }
-
     console.log('元数据信息：', metadata)
 
     // 获文件大小(如果有压缩则使用压缩后的大小)
@@ -477,7 +479,7 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
           url: response,
           is_raw: isVideo(response) ? true : !props.isCompress,
           size: sizeInMB, // 存储转换后的 MB 大小
-          meta: metadata
+          meta: metadata as any // 存储元数据信息
         }
       ]
     })
@@ -533,8 +535,12 @@ interface PreviewerRef {
   isPreviewVisible: boolean
 }
 
-// 修改 ref 的类型定义，使用 Record 类型来允许字符串索引
-const $refs = ref<Record<string, PreviewerRef | undefined>>({})
+// 使用 Map 来存储 refs
+const previewerRefs = ref(new Map<number, PreviewerRef>())
+
+onBeforeUnmount(() => {
+  previewerRefs.value.clear()
+})
 </script>
 
 <template>
@@ -568,12 +574,25 @@ const $refs = ref<Record<string, PreviewerRef | undefined>>({})
             popper-class="media-info-popover"
             :show-after="100"
             :hide-after="100"
-            :disabled="$refs[`previewer-${img.id}`]?.isPreviewVisible"
+            :disabled="previewerRefs.get(img.id)?.isPreviewVisible"
           >
             <template #reference>
               <template v-if="!isVideo(img.url)">
                 <ImgPreviewer
-                  :ref="(el) => ($refs[`previewer-${img.id}`] = el)"
+                  :ref="
+                    (el) => {
+                      if (el) {
+                        const component = el as any
+                        if ('isPreviewVisible' in component) {
+                          previewerRefs.set(img.id, {
+                            isPreviewVisible: component.isPreviewVisible
+                          })
+                        }
+                      } else {
+                        previewerRefs.delete(img.id)
+                      }
+                    }
+                  "
                   :src="img.url"
                   :preview-src-list="
                     imgList.filter((item) => !isVideo(item.url)).map((item) => item.url)
@@ -593,7 +612,20 @@ const $refs = ref<Record<string, PreviewerRef | undefined>>({})
               </template>
               <template v-else>
                 <VideoPreviewer
-                  :ref="(el) => ($refs[`previewer-${img.id}`] = el)"
+                  :ref="
+                    (el) => {
+                      if (el) {
+                        const component = el as any
+                        if ('isPreviewVisible' in component) {
+                          previewerRefs.set(img.id, {
+                            isPreviewVisible: component.isPreviewVisible
+                          })
+                        }
+                      } else {
+                        previewerRefs.delete(img.id)
+                      }
+                    }
+                  "
                   :src="img.url"
                   :preview-src-list="
                     imgList.filter((item) => isVideo(item.url)).map((item) => item.url)
