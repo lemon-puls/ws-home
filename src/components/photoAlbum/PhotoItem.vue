@@ -267,7 +267,7 @@ type VideoInfo = {
 }
 
 // 添加格式化时间的辅助函数
-const formatExifDateTime = (dateTimeStr: string | null): string | null => {
+const formatExifDateTime = (dateTimeStr: string | undefined): string | null => {
   if (!dateTimeStr) return null
   // 将 2023:03:12 19:09:22 转换为 2023-03-12 19:09:22
   return dateTimeStr.replace(/(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')
