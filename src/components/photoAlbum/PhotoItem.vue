@@ -536,7 +536,7 @@ interface PreviewerRef {
 }
 
 // 使用 Map 来存储 refs
-const previewerRefs = ref(new Map<number, PreviewerRef>())
+const previewerRefs = ref(new Map<number, boolean>())
 
 onBeforeUnmount(() => {
   previewerRefs.value.clear()
@@ -574,7 +574,7 @@ onBeforeUnmount(() => {
             popper-class="media-info-popover"
             :show-after="100"
             :hide-after="100"
-            :disabled="previewerRefs.get(img.id)?.isPreviewVisible"
+            :disabled="previewerRefs.get(img.id)"
           >
             <template #reference>
               <template v-if="!isVideo(img.url)">
@@ -584,12 +584,8 @@ onBeforeUnmount(() => {
                       if (el) {
                         const component = el as any
                         if ('isPreviewVisible' in component) {
-                          previewerRefs.set(img.id, {
-                            isPreviewVisible: component.isPreviewVisible
-                          })
+                          previewerRefs.set(img.id, component.isPreviewVisible)
                         }
-                      } else {
-                        previewerRefs.delete(img.id)
                       }
                     }
                   "
@@ -617,12 +613,8 @@ onBeforeUnmount(() => {
                       if (el) {
                         const component = el as any
                         if ('isPreviewVisible' in component) {
-                          previewerRefs.set(img.id, {
-                            isPreviewVisible: component.isPreviewVisible
-                          })
+                          previewerRefs.set(img.id, component.isPreviewVisible)
                         }
-                      } else {
-                        previewerRefs.delete(img.id)
                       }
                     }
                   "
