@@ -376,7 +376,7 @@ const ajaxUpload: UploadRequestHandler = async (option) => {
   }
 
   try {
-    if (!isVideo && props.isCompress) {
+    if (!isVideo && props.isCompress && sizeInMB > 0.5) {
       // 只对图片进行压缩
       const compressedFile = await compressionQueue.add(file)
       console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
