@@ -1,51 +1,85 @@
 // 压缩图片并返回压缩后的 File 对象
+import heic2any from 'heic2any'
+
 export const compressImage = (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
+    //  HEIC 格式转换
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      heicImgCompress(file, resolve, reject)
+    } else {
+      commonImgCompress(file, resolve, reject)
+    }
+  })
+}
 
-    reader.onload = (event: ProgressEvent<FileReader>) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
+const heicImgCompress = (file: File, resolve: (value: File) => void, reject: (reason?: any) => void) => {
+  if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+    let convertedBlob
+    heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.2
+    }).then((result) => {
+      convertedBlob = result as Blob
+      const convertedFile = new File([convertedBlob], file.name.replace(/\.heic$/i, '.jpg'), {
+        type: 'image/jpeg'
+      })
+      resolve(convertedFile)
+    }).catch((error) => {
+      console.error('HEIC 转换失败:', error)
+      reject(error)
+    })
+  } else {
+    resolve(file)
+  }
+}
 
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-        const maxWidth = 1250; // 压缩后的最大宽度
-        const maxHeight = 1250; // 压缩后的最大高度
-        let width = img.width;
-        let height = img.height;
+const commonImgCompress = (file: File, resolve: (value: File) => void, reject: (reason?: any) => void) => {
+  const reader = new FileReader()
+  reader.readAsDataURL(file)
 
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width *= ratio;
-          height *= ratio;
-        }
+  reader.onload = (event: ProgressEvent<FileReader>) => {
+    const img = new Image()
+    img.src = event.target?.result as string
 
-        canvas.width = width;
-        canvas.height = height;
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 
-        ctx.drawImage(img, 0, 0, width, height);
+      const maxWidth = 1250 // 压缩后的最大宽度
+      const maxHeight = 1250 // 压缩后的最大高度
+      let width = img.width
+      let height = img.height
 
-        canvas.toBlob(
-          (blob) => {
-            const compressedFile = new File([blob as Blob], file.name, {
-              type: "image/jpeg",
-            });
-            resolve(compressedFile);
-          },
-          "image/jpeg",
-          0.9
-        ); // 控制压缩质量，范围为 0 - 1，数值越小质量越差
-      };
-    };
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height)
+        width *= ratio
+        height *= ratio
+      }
 
-    reader.onerror = (error) => {
-      reject(error);
-    };
-  });
-};
+      canvas.width = width
+      canvas.height = height
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          const compressedFile = new File([blob as Blob], file.name, {
+            type: 'image/jpeg'
+          })
+          resolve(compressedFile)
+        },
+        'image/jpeg',
+        0.9
+      ) // 控制压缩质量，范围为 0 - 1，数值越小质量越差
+    }
+  }
+
+  reader.onerror = (error) => {
+    reject(error)
+  }
+}
 
 // 调用compressImage方法对图片进行压缩
 export const handleImageCompression = (file: File) => {
@@ -57,8 +91,8 @@ export const handleImageCompression = (file: File) => {
     })
     .catch((error) => {
       // console.error("压缩图片出错：", error);
-    });
-};
+    })
+}
 
 // // 使用示例
 // const fileInput = document.getElementById("fileInput") as HTMLInputElement;

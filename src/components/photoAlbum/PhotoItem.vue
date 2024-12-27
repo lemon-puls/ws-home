@@ -1,7 +1,18 @@
 <script setup lang="ts">
-import { ref, defineExpose, defineProps, defineEmits, onMounted, watch, onBeforeUnmount } from 'vue'
+import { defineEmits, defineExpose, defineProps, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAlbumStore } from '@/stores/album'
 import ExifReader from 'exifreader'
+import { Plus } from '@element-plus/icons-vue'
+import { cos, deleteCosFile, generateUUID } from '@/utils/CosUtils'
+import type { UploadFile, UploadFiles, UploadInstance, UploadRequestHandler } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import ImgPreviewer from '@/components/preview/ImgPreviewer.vue'
+import { Service } from '../../../generated'
+import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
+import { compressImage } from '@/utils/FileUtils'
+import VideoPreviewer from '@/components/preview/VideoPreviewer.vue'
+import { getMetadata } from 'video-metadata-thumbnails'
+import type { UploadRawFile } from 'element-plus/es/components/upload/src/upload'
 
 const albumStore = useAlbumStore()
 
@@ -11,17 +22,6 @@ const props = defineProps({
 })
 
 let $emit = defineEmits(['update:modelValue', 'onUpdate'])
-import { Plus } from '@element-plus/icons-vue'
-import { cos, generateUUID, deleteCosFile } from '@/utils/CosUtils'
-import type { UploadFile, UploadFiles, UploadRequestHandler } from 'element-plus'
-import ImgPreviewer from '@/components/preview/ImgPreviewer.vue'
-import { ElMessage } from 'element-plus'
-import { Service } from '../../../generated'
-import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
-import { compressImage } from '@/utils/FileUtils'
-import type { UploadInstance } from 'element-plus'
-import VideoPreviewer from '@/components/preview/VideoPreviewer.vue'
-import { getMetadata } from 'video-metadata-thumbnails'
 
 const selectedImages = ref<number[]>([])
 
@@ -363,7 +363,7 @@ const getVideoInfo = async (file: File): Promise<VideoInfo | undefined> => {
 }
 
 // 修改 ajaxUpload 函数
-const ajaxUpload: UploadRequestHandler = (option) => {
+const ajaxUpload: UploadRequestHandler = async (option) => {
   const sizeInMB = option.file.size / (1024 * 1024)
   console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
   const file = option.file
@@ -375,33 +375,33 @@ const ajaxUpload: UploadRequestHandler = (option) => {
     return Promise.reject()
   }
 
-  if (!isVideo && props.isCompress) {
-    // 只对图片进行压缩
-    compressionQueue
-      .add(file)
-      .then((compressedFile: File) => {
-        console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
+  try {
+    if (!isVideo && props.isCompress) {
+      // 只对图片进行压缩
+      const compressedFile = await compressionQueue.add(file)
+      console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
 
-        // 存储压缩后的文件大小
-        compressedFileSizes.set(option.file.uid, compressedFile.size)
+      // 存储压缩后的文件大小
+      compressedFileSizes.set(option.file.uid, compressedFile.size)
 
-        // 创建一个新对象，包含压缩后的文件和原始文件的 uid
-        const uploadFileObj = new File([compressedFile], compressedFile.name, {
-          type: compressedFile.type
-        }) as any
-        uploadFileObj.uid = option.file.uid
-        option.file = uploadFileObj
-        uploadFile(option)
-      })
-      .catch((error) => {
-        console.error('图片压缩失败:', error)
-        // 压缩失败时使用原始文件上传
-        // uploadFile(option)
-      })
-  } else {
-    // 视频或不需要压缩的图片直接上传
-    uploadFile(option)
+      // 创建一个新对象，包含压缩后的文件和原始文件的 uid
+      const uploadFileObj = new File([compressedFile], compressedFile.name, {
+        type: compressedFile.type
+      }) as UploadRawFile
+      uploadFileObj.uid = option.file.uid
+      option.file = uploadFileObj
+      uploadFile(option)
+    } else {
+      // 视频或不需要压缩的图片直接上传
+      option.file = file
+      uploadFile(option)
+    }
+  } catch (error) {
+    console.error('文件处理失败:', error)
+    ElMessage.error('文件处理失败，请重试')
+    return Promise.reject(error)
   }
+
   return new Promise(() => {})
 }
 
@@ -455,8 +455,8 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   try {
     // 根据文件类型读取不同的元数据信息
     let metadata: ImageInfo | VideoInfo | undefined
-    if (uploadFile?.raw?.type) {
-      if (uploadFile.raw.type.startsWith('video/')) {
+    if (uploadFile?.raw) {
+      if (uploadFile.raw.type?.startsWith('video/')) {
         metadata = await getVideoInfo(uploadFile.raw)
       } else {
         metadata = await getExifInfo(uploadFile.raw)
@@ -555,7 +555,7 @@ onBeforeUnmount(() => {
       :show-file-list="false"
       :limit="50"
       :on-exceed="handleExceed"
-      :accept="'.jpg,.jpeg,.png,.gif,.mp4,.webm,.ogg,.mov'"
+      :accept="'.jpg,.jpeg,.png,.gif,.mp4,.webm,.ogg,.mov,.heic,.HEIC'"
     >
       <div class="photo-upload-btn" v-if="props.modelValue">
         <Plus class="photo-upload-btn-icon" />

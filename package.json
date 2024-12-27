@@ -20,6 +20,7 @@
     "element-plus": "^2.8.3",
     "exif-js": "^2.3.0",
     "exifreader": "^4.25.0",
+    "heic2any": "^0.0.4",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^4.1.2",
     "video-metadata-thumbnails": "^1.0.22",
