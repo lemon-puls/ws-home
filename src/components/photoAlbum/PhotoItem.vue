@@ -566,7 +566,7 @@ onBeforeUnmount(() => {
     <div class="photo-item">
       <template v-for="(img, index) in imgList" :key="img.id">
         <!-- 当有 meta 数据时才显示 popover -->
-        <template v-if="img.meta">
+        <template v-if="img.meta && Object.keys(img.meta).length > 0">
           <el-popover
             placement="top"
             :width="300"
