@@ -1,6 +1,6 @@
 <template>
   <div id="basicLayout" class="common-layout">
-    <el-container style="height: 100vh">
+    <el-container class="layout-container">
       <el-header :class="{ header: true, hide: shouldHide }">
         <GlobalHeader />
       </el-header>
@@ -9,6 +9,7 @@
         <router-view></router-view>
         <!--                <PhotoManager />-->
       </el-main>
+      <StatementFooter />
     </el-container>
 
     <LoginOrRegister v-if="!isLogin" />
@@ -24,6 +25,7 @@ import { useUserStore } from '@/stores/user'
 import PhotoAlbumAdd from '@/components/photoAlbum/PhotoAlbumAdd.vue'
 import { useAlbumStore } from '@/stores/album'
 import PhotoAlbumDetail from '@/components/photoAlbum/PhotoAlbumDetail.vue'
+import StatementFooter from '@/components/StatementFooter.vue'
 
 const userStore = useUserStore()
 const albumStore = useAlbumStore()
@@ -63,13 +65,10 @@ const shouldHide = ref<boolean>(false)
 <style scoped>
 #basicLayout .header {
   background: #ffffff;
-  /*margin-bottom: 16px;*/
   box-shadow: #eee 1px 1px 5px;
-
   position: sticky;
   top: 0px;
   transition: top 0.3s;
-
   left: 0;
   right: 0;
   z-index: 5000;
@@ -80,18 +79,16 @@ const shouldHide = ref<boolean>(false)
 }
 
 #basicLayout .content {
-  //background: linear-gradient(to right, #eee, #fff);
-  //background: url('../assets/背景1.png') 0% 0% / 100% 100%;
   background-color: #f1f2f5;
   background-size: cover;
   background-attachment: fixed;
-  /*filter: blur(10px);*/
-  /*margin-bottom: 16px;*/
-  /*padding: 20px;*/
-  /*自己加的*/
-  //display: flex;
-  //flex-direction: column;
-  /*justify-content: center;*/
+  min-height: calc(100vh - 120px);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.layout-container {
+  min-height: 100vh;
 }
 
 .el-row {
