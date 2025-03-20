@@ -26,6 +26,7 @@ const icpNumber = import.meta.env.VITE_ICP_NUMBER
   padding: 12px 0;
   background-color: #fafafa;
   border-top: 1px solid #eee;
+  z-index: 1000;
 
   .footer-content {
     display: flex;

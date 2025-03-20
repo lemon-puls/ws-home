@@ -5,9 +5,9 @@
     leave-active-class="animate__animated animate__backOutRight"
   >
     <div id="loginOrRegisterId" v-if="true">
-      <div class="header">
-        <el-switch v-model="isLogin" active-text="登录" inactive-text="注册" />
-      </div>
+      <!--      <div class="header">-->
+      <!--        <el-switch v-model="isLogin" active-text="登录" inactive-text="注册" />-->
+      <!--      </div>-->
       <div class="logo">
         <SvgIcon icon="xdl" :size="logoSize" />
       </div>
@@ -60,7 +60,7 @@
   </transition>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #loginOrRegisterId {
   --min-width: 300px;
   --max-width: 400px;
@@ -141,7 +141,7 @@
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
+  z-index: 100;
   backdrop-filter: blur(3px);
 }
 </style>
