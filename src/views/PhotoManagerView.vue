@@ -11,7 +11,7 @@ import PhotoStatsDialog from '@/components/photoAlbum/PhotoStatsDialog.vue'
 const albumStore = useAlbumStore()
 
 // 从环境变量获取轮播图配置
-const imgList = import.meta.env.VITE_CAROUSEL_IMAGES?.split(',') || []
+let imgList = ref([])
 
 // 相册列表
 const albumList = ref<vo_AlbumVO[]>([])
@@ -91,8 +91,24 @@ const showStats = async () => {
   statsDialogRef.value?.getStats()
 }
 
-onMounted(() => {
+onMounted(async () => {
   getAlbumList()
+
+  imgList.value = import.meta.env.VITE_CAROUSEL_IMAGES?.split(',') || []
+
+  if (imgList.value.length > 0) {
+    // 轮播图需要向后端请求带签名的访问链接，否则无法正常显示
+    for (let i = 0; i < imgList.value.length; i++) {
+      const res = await Service.postCosPresignedUrl({
+        key: imgList.value[i],
+        type: 'download'
+      })
+
+      if (res.code === 0) {
+        imgList.value[i] = res.data.url
+      }
+    }
+  }
 })
 </script>
 

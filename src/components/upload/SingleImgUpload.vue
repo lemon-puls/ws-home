@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, watchEffect, computed, defineProps, defineEmits, withDefaults } from 'vue'
-import { cos, generateUUID, deleteCosFile } from '@/utils/CosUtils'
+import { generateUUID } from '@/utils/CosUtils'
 import { Plus } from '@element-plus/icons-vue'
 
 import { type UploadFile, type UploadFiles, type UploadRequestHandler } from 'element-plus'
 import { compressImage } from '@/utils/FileUtils'
 import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
+import { Service } from '../../../generated'
 
 // 定义 props
 const props = withDefaults(
@@ -49,7 +50,7 @@ const ajaxUpload: UploadRequestHandler = (option) => {
   const sizeInMB = option.file.size / (1024 * 1024)
   console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
 
-  compressImage(option.file).then((compressedFile: File) => {
+  compressImage(option.file).then(async (compressedFile: File) => {
     const sizeInMB = (compressedFile.size / (1024 * 1024)).toFixed(2)
     console.log('压缩后：', sizeInMB + ' MB')
 
@@ -60,45 +61,72 @@ const ajaxUpload: UploadRequestHandler = (option) => {
     uploadFileObj.uid = option.file.uid
 
     option.file = uploadFileObj
-    uploadFile(option)
+    await uploadFile(option)
   })
   return new Promise(() => {})
 }
 
-const uploadFile = (option: any) => {
+const uploadFile = async (option: any) => {
   // 文件后缀
   const suffix = option.file.name.slice(option.file.name.lastIndexOf('.'))
-  cos.uploadFile(
-    {
-      Bucket: import.meta.env.VITE_COS_BUCKET /* 填写自己的 bucket，必须字段 */,
-      Region: import.meta.env.VITE_COS_REGION /* 存储桶所在地域，必须字段 */,
-      Key:
-        import.meta.env.VITE_COS_PATH_PREFIX +
-        props.pathPrefix +
-        generateUUID() +
-        suffix /* 存储在桶里的对象键（例如:1.jpg，a/b/test.txt，图片.jpg）支持中文，必须字段 */,
-      Body: option.file, // 上传文件对象
-      // SliceSize:
-      //   1024 *
-      //   1024 *
-      //   5 /* 触发分块上传的阈值，超过5MB使用分块上传，小于5MB使用 简单上传。可自行设置，非必须 */,
-      onProgress: function (progressData) {
-        // console.log(JSON.stringify(progressData));
-        let progress = Math.round((progressData.loaded / progressData.total) * 100)
-        option.onProgress({
-          percent: progress
-        })
-      }
-    },
-    function (err, data) {
-      if (err) {
-        option.onError(new UploadAjaxError(err.message, err?.statusCode ?? 0, err.method, err.url))
-      } else {
-        const downloadUrl = 'https://' + data.Location
-        option.onSuccess(downloadUrl)
-      }
+  const fileKey = import.meta.env.VITE_COS_PATH_PREFIX + props.pathPrefix + generateUUID() + suffix
+
+  try {
+    const res = await Service.postCosPresignedUrl({
+      type: 'upload',
+      key: fileKey
+    })
+
+    if (res.code !== 0) {
+      throw new Error('获取上传 URL 失败')
     }
-  )
+
+    // 使用 XMLHttpRequest 上传文件以支持进度监控
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100)
+          option.onProgress({ percent })
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(xhr.response)
+        } else {
+          reject(new Error(`上传失败: ${xhr.status}`))
+        }
+      })
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('上传失败'))
+      })
+
+      xhr.open('PUT', res.data.url)
+      xhr.setRequestHeader('Content-Type', option.file.type)
+      xhr.send(option.file)
+    })
+
+    // 获取带签名下载 URL
+    const res1 = await Service.postCosPresignedUrl({
+      key: fileKey,
+      type: 'download'
+    })
+
+    if (res1.code !== 0) {
+      throw new Error(res1.msg || '获取访问地址失败')
+    }
+
+    const downloadUrl = res1.data.url
+    option.onSuccess(downloadUrl)
+  } catch (error: any) {
+    console.error('上传失败:', error)
+    option.onError(
+      new UploadAjaxError(error.message, error?.statusCode ?? 0, error.method, error.url)
+    )
+  }
 }
 
 const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles: UploadFiles) => {
@@ -106,7 +134,9 @@ const handleSuccess = async (response: any, uploadFile: UploadFile, uploadFiles:
   // 删除 COS 上的旧图片
   if (imageUrl.value) {
     try {
-      await deleteCosFile(imageUrl.value)
+      await Service.postCosBatchDelete({
+        keys: [imageUrl.value],
+      })
     } catch (err) {
       console.error('删除旧图片失败:', err)
     }
