@@ -5,13 +5,13 @@ import SvgIcon from '@/icons/SvgIcon'
 import { useAlbumStore } from '@/stores/album'
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Service, type vo_AlbumVO } from '../../generated'
+import { dto_GetPresignedURLReq, Service, type vo_AlbumVO } from '../../generated'
 import PhotoStatsDialog from '@/components/photoAlbum/PhotoStatsDialog.vue'
 
 const albumStore = useAlbumStore()
 
 // 从环境变量获取轮播图配置
-let imgList = ref([])
+let imgList = ref<string[]>([])
 
 // 相册列表
 const albumList = ref<vo_AlbumVO[]>([])
@@ -101,7 +101,7 @@ onMounted(async () => {
     for (let i = 0; i < imgList.value.length; i++) {
       const res = await Service.postCosPresignedUrl({
         key: imgList.value[i],
-        type: 'download'
+        type: dto_GetPresignedURLReq.type.DOWNLOAD
       })
 
       if (res.code === 0) {

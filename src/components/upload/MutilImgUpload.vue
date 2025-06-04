@@ -12,7 +12,7 @@ import {
 } from 'element-plus'
 import { compressImage } from '@/utils/FileUtils'
 import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
-import { Service } from '../../../generated'
+import { dto_GetPresignedURLReq, Service } from '../../../generated'
 
 // 定义 props - 接收字符串数组
 const props = withDefaults(
@@ -87,7 +87,7 @@ const ajaxUpload: UploadRequestHandler = async (option) => {
   console.log('压缩前：', sizeInMB.toFixed(2) + ' MB')
 
   if (props.isCompress) {
-    compressImage(option.file).then((compressedFile: File) => {
+    compressImage(option.file).then(async (compressedFile: File) => {
       console.log('压缩后：', (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB')
 
       // 创建一个新对象，包含压缩后的文件和原始文件的 uid
@@ -112,7 +112,7 @@ const uploadFile = async (option: any) => {
 
   try {
     const res = await Service.postCosPresignedUrl({
-      type: 'upload',
+      type: dto_GetPresignedURLReq.type.UPLOAD,
       key: fileKey
     })
 
@@ -151,7 +151,7 @@ const uploadFile = async (option: any) => {
     // 获取带签名下载 URL
     const res1 = await Service.postCosPresignedUrl({
       key: fileKey,
-      type: 'download'
+      type: dto_GetPresignedURLReq.type.DOWNLOAD
     })
 
     if (res1.code !== 0) {

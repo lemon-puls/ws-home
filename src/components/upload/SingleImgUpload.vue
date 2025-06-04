@@ -6,7 +6,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { type UploadFile, type UploadFiles, type UploadRequestHandler } from 'element-plus'
 import { compressImage } from '@/utils/FileUtils'
 import { UploadAjaxError } from 'element-plus/es/components/upload/src/ajax'
-import { Service } from '../../../generated'
+import { dto_GetPresignedURLReq, Service } from '../../../generated'
 
 // 定义 props
 const props = withDefaults(
@@ -73,7 +73,7 @@ const uploadFile = async (option: any) => {
 
   try {
     const res = await Service.postCosPresignedUrl({
-      type: 'upload',
+      type: dto_GetPresignedURLReq.type.UPLOAD,
       key: fileKey
     })
 
@@ -112,7 +112,7 @@ const uploadFile = async (option: any) => {
     // 获取带签名下载 URL
     const res1 = await Service.postCosPresignedUrl({
       key: fileKey,
-      type: 'download'
+      type: dto_GetPresignedURLReq.type.DOWNLOAD
     })
 
     if (res1.code !== 0) {
